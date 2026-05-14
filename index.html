@@ -429,52 +429,221 @@ main {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(16px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s;
+  transition: opacity 0.5s;
 }
 .overlay.show { opacity: 1; pointer-events: all; }
-.win-card {
-  background: var(--surface);
-  border: 1px solid rgba(124,106,247,0.4);
-  border-radius: 20px;
-  padding: 48px 52px;
-  text-align: center;
-  max-width: 380px;
-  width: 90%;
-  box-shadow: 0 0 80px rgba(124,106,247,0.25);
-  transform: translateY(20px);
-  transition: transform 0.4s;
+
+/* Confetti canvas sits behind the card */
+#confetti-canvas {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 201;
 }
-.overlay.show .win-card { transform: translateY(0); }
-.win-emoji { font-size: 52px; margin-bottom: 16px; display: block; animation: bounceIn 0.6s ease 0.3s both; }
-@keyframes bounceIn { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
-.win-title { font-family: 'DM Serif Display', serif; font-size: 36px; color: var(--text); margin-bottom: 6px; }
-.win-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
-.win-stats { display: flex; gap: 20px; justify-content: center; margin-bottom: 32px; }
-.win-stat { text-align: center; }
-.win-stat-val { font-family: 'DM Mono', monospace; font-size: 26px; color: var(--accent); display: block; }
-.win-stat-lbl { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+
+.win-card {
+  position: relative;
+  z-index: 202;
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 0;
+  text-align: center;
+  max-width: 420px;
+  width: 92%;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(124,106,247,0.3), 0 30px 80px rgba(0,0,0,0.5), 0 0 120px rgba(124,106,247,0.2);
+  transform: scale(0.85) translateY(40px);
+  transition: transform 0.6s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s;
+  opacity: 0;
+}
+.overlay.show .win-card {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+
+/* Rainbow shimmer top bar */
+.win-rainbow-bar {
+  height: 4px;
+  background: linear-gradient(90deg, #7c6af7, #f76a8c, #f0c060, #6af7c8, #7c6af7);
+  background-size: 200% 100%;
+  animation: rainbowSlide 2.5s linear infinite;
+}
+@keyframes rainbowSlide { 0%{background-position:0% 0%} 100%{background-position:200% 0%} }
+
+.win-body { padding: 36px 40px 40px; }
+
+/* Burst emoji */
+.win-burst {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.win-burst-emoji {
+  font-size: 64px;
+  display: block;
+  animation: burstIn 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+  filter: drop-shadow(0 0 20px rgba(124,106,247,0.6));
+}
+@keyframes burstIn {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.25) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Ring pulses around emoji */
+.win-ring {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: ringPulse 1.4s ease-out 0.8s both;
+  opacity: 0;
+}
+.win-ring:nth-child(2) { inset: -18px; animation-delay: 1s; border-color: var(--accent2); }
+.win-ring:nth-child(3) { inset: -28px; animation-delay: 1.2s; border-color: var(--accent3); }
+@keyframes ringPulse {
+  0%   { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Headline */
+.win-headline {
+  font-family: 'DM Serif Display', serif;
+  font-size: 38px;
+  line-height: 1.1;
+  margin: 16px 0 4px;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: slideUpFade 0.5s ease 0.55s forwards;
+}
+.win-headline em { font-style: italic; color: var(--accent); }
+
+/* Rotating superlative badge */
+.win-badge {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, rgba(124,106,247,0.2), rgba(106,247,200,0.15));
+  border: 1px solid rgba(124,106,247,0.35);
+  color: var(--accent3);
+  margin-bottom: 18px;
+  opacity: 0;
+  animation: slideUpFade 0.5s ease 0.7s forwards;
+}
+
+.win-message {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 300px;
+  margin: 0 auto 26px;
+  opacity: 0;
+  animation: slideUpFade 0.5s ease 0.85s forwards;
+}
+
+/* Stats row */
+.win-stats {
+  display: flex;
+  gap: 0;
+  justify-content: center;
+  margin-bottom: 28px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  opacity: 0;
+  animation: slideUpFade 0.5s ease 1s forwards;
+}
+.win-stat {
+  flex: 1;
+  padding: 14px 10px;
+  text-align: center;
+  position: relative;
+}
+.win-stat + .win-stat::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; height: 60%;
+  width: 1px;
+  background: var(--border);
+}
+.win-stat-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  color: var(--accent);
+  display: block;
+  font-weight: 500;
+}
+.win-stat-lbl { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+
+/* Stars rating */
+.win-stars {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: slideUpFade 0.5s ease 1.1s forwards;
+}
+.win-star {
+  font-size: 22px;
+  filter: grayscale(1);
+  transition: filter 0.3s, transform 0.3s;
+}
+.win-star.lit {
+  filter: grayscale(0) drop-shadow(0 0 6px #f0c060);
+  animation: starPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes starPop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
+
+/* Buttons */
+.win-btns {
+  display: flex;
+  gap: 10px;
+  opacity: 0;
+  animation: slideUpFade 0.5s ease 1.2s forwards;
+}
 .win-btn {
+  flex: 1;
   background: linear-gradient(135deg, var(--accent), #9d8fff);
   border: none;
   border-radius: 12px;
-  padding: 13px 32px;
+  padding: 13px 20px;
   color: #fff;
   font-family: 'Outfit', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.win-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,106,247,0.4); }
+.win-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,106,247,0.45); }
+.win-btn.secondary {
+  background: var(--surface2);
+  color: var(--text-dim);
+  border: 1px solid var(--border-bright);
+  box-shadow: none;
+}
+.win-btn.secondary:hover { color: var(--text); border-color: var(--accent); box-shadow: none; transform: translateY(-2px); }
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+body.light .win-card { box-shadow: 0 0 0 1px rgba(91,71,224,0.2), 0 30px 80px rgba(0,0,0,0.15), 0 0 80px rgba(91,71,224,0.1); }
+
 
 /* ── TOAST ── */
 .toast {
@@ -878,27 +1047,53 @@ main {
   </div>
 </div>
 
+<!-- CONFETTI CANVAS -->
+<canvas id="confetti-canvas"></canvas>
+
 <!-- WIN OVERLAY -->
 <div class="overlay" id="win-overlay">
   <div class="win-card">
-    <span class="win-emoji">🎉</span>
-    <div class="win-title">Solved!</div>
-    <div class="win-sub">Brilliant — puzzle completed!</div>
-    <div class="win-stats">
-      <div class="win-stat">
-        <span class="win-stat-val" id="win-time">00:00</span>
-        <span class="win-stat-lbl">Time</span>
+    <div class="win-rainbow-bar"></div>
+    <div class="win-body">
+
+      <div class="win-burst">
+        <div class="win-ring"></div>
+        <div class="win-ring"></div>
+        <div class="win-ring"></div>
+        <span class="win-burst-emoji" id="win-emoji">🏆</span>
       </div>
-      <div class="win-stat">
-        <span class="win-stat-val" id="win-moves">0</span>
-        <span class="win-stat-lbl">Moves</span>
+
+      <div class="win-headline" id="win-headline">Puzzle <em>Solved!</em></div>
+      <div class="win-badge" id="win-badge">⚡ Excellent Work</div>
+      <p class="win-message" id="win-message">You cracked it! Every row, column and box is perfectly filled.</p>
+
+      <div class="win-stats">
+        <div class="win-stat">
+          <span class="win-stat-val" id="win-time">00:00</span>
+          <span class="win-stat-lbl">Time</span>
+        </div>
+        <div class="win-stat">
+          <span class="win-stat-val" id="win-moves">0</span>
+          <span class="win-stat-lbl">Moves</span>
+        </div>
+        <div class="win-stat">
+          <span class="win-stat-val" id="win-diff">Easy</span>
+          <span class="win-stat-lbl">Level</span>
+        </div>
       </div>
-      <div class="win-stat">
-        <span class="win-stat-val" id="win-diff">Easy</span>
-        <span class="win-stat-lbl">Level</span>
+
+      <div class="win-stars" id="win-stars">
+        <span class="win-star" id="star0">⭐</span>
+        <span class="win-star" id="star1">⭐</span>
+        <span class="win-star" id="star2">⭐</span>
       </div>
+
+      <div class="win-btns">
+        <button class="win-btn secondary" onclick="closeWin()">Keep Playing</button>
+        <button class="win-btn" onclick="newGame();closeWin()">New Game</button>
+      </div>
+
     </div>
-    <button class="win-btn" onclick="newGame();closeWin()">Play Again</button>
   </div>
 </div>
 
@@ -1193,17 +1388,146 @@ function checkWin() {
   for(let r=0;r<9;r++) for(let c=0;c<9;c++) {
     if (board[r][c]!==solution[r][c]) return;
   }
-  // Win!
   clearInterval(timerInterval);
   gameOver = true;
-  document.getElementById('win-time').textContent = document.getElementById('timer').textContent;
+
+  const timeStr = document.getElementById('timer').textContent;
+  const [mm,ss] = timeStr.split(':').map(Number);
+  const totalSec = mm*60+ss;
+
+  // Dynamic content based on difficulty + time
+  const msgs = {
+    easy: {
+      fast:   { emoji:'🏆', headline:'Blazing <em>Fast!</em>',  badge:'⚡ Speed Demon',        msg:'You tore through that Easy puzzle like a pro. Pure instinct!' },
+      mid:    { emoji:'🎉', headline:'Well <em>Done!</em>',     badge:'✨ Smooth Solve',        msg:'Nice and clean! You navigated that puzzle with real confidence.' },
+      slow:   { emoji:'😊', headline:'Puzzle <em>Solved!</em>', badge:'🎯 Mission Complete',    msg:'Every journey starts somewhere. You finished — that\'s what counts!' },
+    },
+    medium: {
+      fast:   { emoji:'🔥', headline:'On <em>Fire!</em>',       badge:'🔥 Lightning Mind',      msg:'That Medium puzzle barely stood a chance. Exceptional solving!' },
+      mid:    { emoji:'💜', headline:'Brilliant <em>Work!</em>',badge:'💡 Sharp Thinker',       msg:'Solid deduction all the way through. Medium difficulty, maximum style.' },
+      slow:   { emoji:'🌟', headline:'You <em>Got It!</em>',    badge:'🧩 Puzzle Tamer',        msg:'Medium is no joke and you conquered it. Patience always wins.' },
+    },
+    hard: {
+      fast:   { emoji:'👑', headline:'Absolutely <em>Genius!</em>', badge:'👑 Grandmaster',    msg:'Hard difficulty at that speed? You\'re playing in a different league.' },
+      mid:    { emoji:'🚀', headline:'Outstanding <em>Solve!</em>',  badge:'🧠 Logic Master',   msg:'Hard puzzles demand hard thinking. You delivered brilliantly.' },
+      slow:   { emoji:'💎', headline:'Against All <em>Odds!</em>',   badge:'💎 Iron Will',      msg:'Hard is HARD. You stayed the course and cracked it. Legendary patience.' },
+    },
+  };
+
+  const thresholds = { easy:[180,480], medium:[300,720], hard:[480,1200] };
+  const [t1,t2] = thresholds[difficulty];
+  const tier = totalSec < t1 ? 'fast' : totalSec < t2 ? 'mid' : 'slow';
+  const m = msgs[difficulty][tier];
+
+  // Stars: fast=3, mid=2, slow=1
+  const stars = tier==='fast' ? 3 : tier==='mid' ? 2 : 1;
+
+  document.getElementById('win-emoji').textContent = m.emoji;
+  document.getElementById('win-headline').innerHTML = m.headline;
+  document.getElementById('win-badge').innerHTML = m.badge;
+  document.getElementById('win-message').textContent = m.msg;
+  document.getElementById('win-time').textContent = timeStr;
   document.getElementById('win-moves').textContent = moves;
   document.getElementById('win-diff').textContent = difficulty.charAt(0).toUpperCase()+difficulty.slice(1);
-  setTimeout(()=>document.getElementById('win-overlay').classList.add('show'), 400);
+
+  // Light stars with staggered delay
+  for(let i=0;i<3;i++) {
+    const el = document.getElementById('star'+i);
+    el.classList.remove('lit');
+    if(i<stars) setTimeout(()=>el.classList.add('lit'), 1300+i*220);
+  }
+
+  setTimeout(()=>{
+    document.getElementById('win-overlay').classList.add('show');
+    launchConfetti();
+  }, 400);
 }
 
 function closeWin() {
   document.getElementById('win-overlay').classList.remove('show');
+  stopConfetti();
+}
+
+// ─── CONFETTI ────────────────────────────────────────────
+let confettiAnimId = null;
+let confettiPieces = [];
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#7c6af7','#f76a8c','#6af7c8','#f0c060','#a78bfa','#fb7185','#34d399'];
+  const shapes = ['rect','circle','ribbon'];
+  confettiPieces = [];
+
+  // Spawn 160 pieces from two cannons (top-left, top-right)
+  for(let i=0;i<160;i++) {
+    const side = i < 80 ? 0 : 1; // 0=left, 1=right
+    confettiPieces.push({
+      x: side===0 ? canvas.width*0.2 : canvas.width*0.8,
+      y: -10,
+      vx: (Math.random()-0.5)*14 + (side===0?4:-4),
+      vy: -(Math.random()*12+8),
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*12,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      shape: shapes[Math.floor(Math.random()*shapes.length)],
+      w: Math.random()*10+6,
+      h: Math.random()*6+4,
+      opacity: 1,
+      gravity: 0.35+Math.random()*0.2,
+    });
+  }
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confettiPieces.forEach(p=>{
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.vx *= 0.99;
+      p.rot += p.rotV;
+      if(p.y > canvas.height*0.7) p.opacity -= 0.018;
+      p.opacity = Math.max(0,p.opacity);
+
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color;
+
+      if(p.shape==='circle') {
+        ctx.beginPath();
+        ctx.arc(0,0,p.w/2,0,Math.PI*2);
+        ctx.fill();
+      } else if(p.shape==='ribbon') {
+        ctx.beginPath();
+        ctx.moveTo(-p.w/2, 0);
+        ctx.quadraticCurveTo(0, -p.h*1.5, p.w/2, 0);
+        ctx.quadraticCurveTo(0, p.h*1.5, -p.w/2, 0);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      }
+      ctx.restore();
+    });
+
+    frame++;
+    // Stop after all faded or 220 frames
+    const alive = confettiPieces.some(p=>p.opacity>0);
+    if(alive && frame < 220) confettiAnimId = requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  confettiAnimId = requestAnimationFrame(draw);
+}
+
+function stopConfetti() {
+  if(confettiAnimId) { cancelAnimationFrame(confettiAnimId); confettiAnimId=null; }
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
 }
 
 // ─── TIMER ───────────────────────────────────────────────
