@@ -753,6 +753,9 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
   <button class="tab-btn" id="tab-ludo" onclick="switchTab('ludo')">
     <span class="tab-icon">🎲</span> LUDO
   </button>
+  <button class="tab-btn" id="tab-snl" onclick="switchTab('snl')">
+    <span class="tab-icon">🐍</span> SNAKES & LADDERS
+  </button>
 </div>
 
 <!-- SUDOKU TAB -->
@@ -887,6 +890,73 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
   </div>
 </div>
 
+<!-- SNAKE & LADDERS TAB -->
+<div class="tab-content" id="content-snl">
+  <div class="ludo-wrap" id="snl-wrap">
+    <!-- Setup screen -->
+    <div class="ludo-setup" id="snl-setup" style="margin:0 auto;">
+      <h2>🐍 Snakes & Ladders</h2>
+      <p>Classic race from square 1 to 100! Climb ladders, dodge snakes — for 2 to 4 players.</p>
+      <div class="panel-title" style="text-align:left;margin-bottom:12px;">Number of Players</div>
+      <div class="player-count-btns">
+        <button class="pc-btn" data-sn="2" onclick="snlSelectPlayers(2,this)">2<span>players</span></button>
+        <button class="pc-btn active" data-sn="3" onclick="snlSelectPlayers(3,this)">3<span>players</span></button>
+        <button class="pc-btn" data-sn="4" onclick="snlSelectPlayers(4,this)">4<span>players</span></button>
+      </div>
+      <div class="panel-title" style="text-align:left;margin-bottom:12px;">Player Names</div>
+      <div class="player-names" id="snl-player-names-setup"></div>
+      <button class="start-ludo-btn" onclick="snlStartGame()">🐍 Start Game</button>
+    </div>
+
+    <!-- Game area -->
+    <div id="snl-game" style="display:none; width:100%;">
+      <div class="ludo-wrap" style="padding:0;">
+        <!-- Left panel -->
+        <div class="ludo-panel">
+          <div class="ludo-info-card">
+            <div class="panel-title">Current Turn</div>
+            <div class="turn-indicator">
+              <div class="turn-dot" id="snl-turn-dot"></div>
+              <div>
+                <div class="turn-name" id="snl-turn-name">Player 1</div>
+                <div class="turn-sub">YOUR MOVE</div>
+              </div>
+            </div>
+            <div class="dice-area">
+              <canvas id="snl-dice-canvas" width="80" height="80" onclick="snlRollDice()" style="cursor:pointer;border-radius:14px;display:block;margin:0 auto;"></canvas>
+              <div class="dice-result" id="snl-dice-result">Click dice to roll</div>
+            </div>
+          </div>
+
+          <div class="ludo-info-card">
+            <div class="panel-title">Players</div>
+            <div class="player-status-list" id="snl-player-list"></div>
+          </div>
+
+          <div class="ludo-info-card">
+            <div class="panel-title">Game Log</div>
+            <div class="game-log" id="snl-log">
+              <div class="log-entry">Game started! Good luck!</div>
+            </div>
+          </div>
+
+          <div class="ludo-action-btns">
+            <button class="action-btn primary" onclick="snlRestart()"><span>↺</span> New Game</button>
+          </div>
+        </div>
+
+        <!-- Board -->
+        <div class="ludo-board-area">
+          <div id="snl-board-container" style="width:min(540px,95vw);height:min(540px,95vw);">
+            <canvas id="snl-board-canvas" style="width:100%;height:100%;border-radius:16px;box-shadow:0 0 60px rgba(124,106,247,0.18),0 0 0 2px rgba(124,106,247,0.22);"></canvas>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;">Click dice to roll · First to reach 100 wins!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- .app -->
 
 <!-- SUDOKU HOW TO PLAY MODAL -->
@@ -932,6 +1002,29 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
         <div class="htp-rule"><div class="htp-rule-icon">💥</div><div class="htp-rule-text"><strong>Capture</strong><span>Land on an opponent's token to send it back to their yard. Safe squares (marked with a star ⭐) protect tokens from capture.</span></div></div>
         <div class="htp-rule"><div class="htp-rule-icon">🔁</div><div class="htp-rule-text"><strong>Roll Again</strong><span>Roll a 6 and you get an extra turn! Get a token home and you also roll again.</span></div></div>
         <div class="htp-rule"><div class="htp-rule-icon">🎯</div><div class="htp-rule-text"><strong>Reach Home</strong><span>Guide your tokens along the coloured path and into the home column. Exact roll needed to enter the home triangle.</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SNL HOW TO PLAY MODAL -->
+<div class="htp-overlay" id="snl-htp-overlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="htp-modal">
+    <div class="htp-header">
+      <div class="htp-title">How to <span>Play Snakes & Ladders</span></div>
+      <button class="htp-close" onclick="document.getElementById('snl-htp-overlay').classList.remove('show')">✕</button>
+    </div>
+    <div class="htp-body">
+      <div>
+        <div class="htp-section-title">Objective</div>
+        <div class="htp-rule"><div class="htp-rule-icon">🎯</div><div class="htp-rule-text"><strong>Race to 100</strong><span>Be the first player to land exactly on square 100. Navigate snakes and ladders along the way!</span></div></div>
+      </div>
+      <div>
+        <div class="htp-section-title">How to Play</div>
+        <div class="htp-rule"><div class="htp-rule-icon">🎲</div><div class="htp-rule-text"><strong>Roll the Dice</strong><span>Click the colourful dice on your turn to roll. Move your token forward that many squares.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">🪜</div><div class="htp-rule-text"><strong>Ladders</strong><span>Land on the bottom of a ladder and you climb straight up to a higher square — a lucky shortcut!</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">🐍</div><div class="htp-rule-text"><strong>Snakes</strong><span>Land on a snake's head and you slide all the way down to its tail — bad luck!</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">🏁</div><div class="htp-rule-text"><strong>Exact Finish</strong><span>You don't need an exact roll to win — first to reach or pass 100 wins the game!</span></div></div>
       </div>
     </div>
   </div>
@@ -1009,7 +1102,7 @@ function switchTab(tab) {
     if (el) el.style.display = tab === 'sudoku' ? '' : 'none';
   });
 
-  // Show ludo HTP button if on ludo tab
+  // Ludo HTP button
   let ludoHtpBtn = document.getElementById('ludo-htp-header-btn');
   if (tab === 'ludo') {
     if (!ludoHtpBtn) {
@@ -1023,6 +1116,23 @@ function switchTab(tab) {
     ludoHtpBtn.style.display = '';
   } else if (ludoHtpBtn) {
     ludoHtpBtn.style.display = 'none';
+  }
+
+  // SNL HTP button
+  let snlHtpBtn = document.getElementById('snl-htp-header-btn');
+  if (tab === 'snl') {
+    if (!snlHtpBtn) {
+      snlHtpBtn = document.createElement('button');
+      snlHtpBtn.id = 'snl-htp-header-btn';
+      snlHtpBtn.className = 'htp-btn';
+      snlHtpBtn.textContent = '? How to Play';
+      snlHtpBtn.onclick = () => document.getElementById('snl-htp-overlay').classList.add('show');
+      document.querySelector('.header-right').insertBefore(snlHtpBtn, document.getElementById('theme-toggle'));
+    }
+    snlHtpBtn.style.display = '';
+    if (snlGameStarted) { snlDrawBoard(); snlDrawDice(snl.lastRoll || 0); }
+  } else if (snlHtpBtn) {
+    snlHtpBtn.style.display = 'none';
   }
 }
 
@@ -1819,10 +1929,631 @@ function getCellFill(row, col, isLight) {
 }
 
 // ═══════════════════════════════════════════════════════
-// INIT
+// SNAKE & LADDERS ENGINE
 // ═══════════════════════════════════════════════════════
+
+const SNL_COLORS = ['#f76a8c','#6af7c8','#f0c060','#7c6af7'];
+const SNL_NAMES  = ['Red','Green','Yellow','Blue'];
+
+// Snakes: head → tail  (head > tail)
+const SNAKES = {
+  99:  8,  94: 30, 87: 24, 73: 16, 62: 19, 56: 2, 49: 11, 48: 26, 16: 6
+};
+// Ladders: bottom → top  (bottom < top)
+const LADDERS = {
+  1: 38,  4: 14, 9: 31, 20: 41, 28: 84, 40: 59, 51: 67, 63: 81, 71: 91
+};
+
+// Snake color palette (vibrant, unique per snake)
+const SNAKE_COLORS = [
+  {body:'#ff4b6e', dark:'#c9003a'},
+  {body:'#ff9f1c', dark:'#c97300'},
+  {body:'#a855f7', dark:'#7c21d4'},
+  {body:'#06d6a0', dark:'#019e75'},
+  {body:'#f72585', dark:'#b8007a'},
+  {body:'#4cc9f0', dark:'#0096c7'},
+  {body:'#ffd60a', dark:'#c9a600'},
+  {body:'#e63946', dark:'#9d0000'},
+  {body:'#7b2d8b', dark:'#4a1060'},
+];
+// Ladder colors
+const LADDER_COLORS = [
+  {rail:'#f0c060', rung:'#c8920a'},
+  {rail:'#6af7c8', rung:'#0e9e78'},
+  {rail:'#7c6af7', rung:'#4a2fd4'},
+  {rail:'#f76a8c', rung:'#c9003a'},
+  {rail:'#ff9f1c', rung:'#c97300'},
+  {rail:'#4cc9f0', rung:'#0096c7'},
+  {rail:'#a8e063', rung:'#5aad08'},
+  {rail:'#fd79a8', rung:'#c9005e'},
+  {rail:'#fdcb6e', rung:'#c99a00'},
+];
+
+let snlNumPlayers = 3;
+let snlGameStarted = false;
+let snl = {
+  players: [],   // {name, color, pos}  pos 0=start, 100=win
+  current: 0,
+  rolled: false,
+  lastRoll: 0,
+  gameOver: false,
+  animating: false,
+};
+
+// ── Setup ──
+function snlSelectPlayers(n, btn) {
+  snlNumPlayers = n;
+  document.querySelectorAll('.pc-btn[data-sn]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  snlRenderNameInputs();
+}
+
+function snlRenderNameInputs() {
+  const c = document.getElementById('snl-player-names-setup');
+  c.innerHTML = '';
+  for (let i = 0; i < snlNumPlayers; i++) {
+    const row = document.createElement('div');
+    row.className = 'player-name-row';
+    row.innerHTML = `<div class="player-color-dot" style="background:${SNL_COLORS[i]}"></div>
+      <input class="player-name-input" id="snl-pname-${i}" type="text" value="${SNL_NAMES[i]}" maxlength="12" placeholder="Player ${i+1}">`;
+    c.appendChild(row);
+  }
+}
+
+function snlStartGame() {
+  snlGameStarted = true;
+  snl.players = [];
+  for (let i = 0; i < snlNumPlayers; i++) {
+    const inp = document.getElementById('snl-pname-' + i);
+    snl.players.push({ name: inp ? inp.value.trim() || SNL_NAMES[i] : SNL_NAMES[i], color: SNL_COLORS[i], pos: 0 });
+  }
+  snl.current = 0; snl.rolled = false; snl.lastRoll = 0; snl.gameOver = false; snl.animating = false;
+
+  document.getElementById('snl-setup').style.display = 'none';
+  document.getElementById('snl-game').style.display = '';
+
+  // Size canvas
+  const container = document.getElementById('snl-board-container');
+  const sz = container.offsetWidth || 540;
+  const bc = document.getElementById('snl-board-canvas');
+  bc.width = bc.height = sz;
+
+  snlUpdateUI();
+  snlDrawBoard();
+  snlDrawDice(0);
+  snlAddLog('🐍 Game started! ' + snl.players[0].name + ' goes first.');
+}
+
+function snlRestart() {
+  snlGameStarted = false;
+  document.getElementById('snl-setup').style.display = '';
+  document.getElementById('snl-game').style.display = 'none';
+  snlRenderNameInputs();
+}
+
+// ── Cell position helpers ──
+// Board: row 0 at bottom (square 1-10), row 9 at top (square 91-100)
+// Odd rows (from bottom) go left→right, even rows right→left (snake pattern)
+function snlSquareToXY(sq, canvasSize) {
+  const cell = canvasSize / 10;
+  const idx  = sq - 1;            // 0-99
+  const row  = Math.floor(idx / 10);  // 0=bottom … 9=top
+  const col  = idx % 10;
+  // Alternate direction
+  const actualCol = row % 2 === 0 ? col : 9 - col;
+  const px = actualCol * cell + cell / 2;
+  const py = canvasSize - (row * cell + cell / 2);
+  return { x: px, y: py, cell };
+}
+
+// ── Board drawing ──
+function snlDrawBoard() {
+  const bc   = document.getElementById('snl-board-canvas');
+  if (!bc) return;
+  const sz   = bc.width;
+  const ctx  = bc.getContext('2d');
+  const cell = sz / 10;
+  const isLight = document.body.classList.contains('light');
+
+  ctx.clearRect(0, 0, sz, sz);
+
+  // Background gradient
+  const grd = ctx.createLinearGradient(0, 0, sz, sz);
+  if (isLight) {
+    grd.addColorStop(0, '#eeeef8'); grd.addColorStop(1, '#e0e0f0');
+  } else {
+    grd.addColorStop(0, '#0d0d18'); grd.addColorStop(1, '#12121f');
+  }
+  ctx.fillStyle = grd;
+  ctx.beginPath(); ctx.roundRect(0, 0, sz, sz, 16); ctx.fill();
+
+  // Cell palette — alternating 2 shades per row for checkerboard feel
+  const palettes = isLight
+    ? [['#e8eaf6','#dde1f8'],['#e8f5e9','#d7eeda'],['#fce4ec','#fad5e0'],['#fff8e1','#fdefc7'],
+       ['#e3f2fd','#cce8fb'],['#f3e5f5','#e8d1ef'],['#e0f7fa','#c8eff4'],['#fafafa','#efefef'],
+       ['#e8eaf6','#dde1f8'],['#e8f5e9','#d7eeda']]
+    : [['#14142a','#191930'],['#0f1f18','#142817'],['#1f0e17','#280f1e'],['#1e1a0a','#261f05'],
+       ['#0c1822','#10202e'],['#16101f','#1d1228'],['#0c1e20','#0f2628'],['#161616','#1e1e1e'],
+       ['#14142a','#191930'],['#0f1f18','#142817']];
+
+  for (let row = 0; row < 10; row++) {
+    const [c1, c2] = palettes[row];
+    for (let col = 0; col < 10; col++) {
+      const actualCol = row % 2 === 0 ? col : 9 - col;
+      const sq = row * 10 + col + 1;
+      const px = actualCol * cell;
+      const py = sz - (row + 1) * cell;
+      ctx.fillStyle = col % 2 === 0 ? c1 : c2;
+      ctx.fillRect(px, py, cell, cell);
+
+      // Square number
+      ctx.fillStyle = isLight ? 'rgba(0,0,20,0.28)' : 'rgba(255,255,255,0.22)';
+      ctx.font = `bold ${cell * 0.2}px DM Mono, monospace`;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText(sq, px + 3, py + 3);
+    }
+  }
+
+  // Grid lines
+  ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 10; i++) {
+    ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, sz); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(sz, i * cell); ctx.stroke();
+  }
+
+  // ── Draw Ladders ──
+  const ladderEntries = Object.entries(LADDERS);
+  ladderEntries.forEach(([bottom, top], li) => {
+    const lc = LADDER_COLORS[li % LADDER_COLORS.length];
+    const b = snlSquareToXY(+bottom, sz);
+    const t = snlSquareToXY(+top, sz);
+
+    const dx = t.x - b.x, dy = t.y - b.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const nx = -dy / len * cell * 0.13;  // perpendicular offset for rails
+    const ny =  dx / len * cell * 0.13;
+
+    // Rail glow
+    ctx.save();
+    ctx.shadowColor = lc.rail; ctx.shadowBlur = 8;
+    // Left rail
+    ctx.beginPath();
+    ctx.moveTo(b.x - nx, b.y - ny);
+    ctx.lineTo(t.x - nx, t.y - ny);
+    ctx.strokeStyle = lc.rail; ctx.lineWidth = cell * 0.07;
+    ctx.lineCap = 'round'; ctx.stroke();
+    // Right rail
+    ctx.beginPath();
+    ctx.moveTo(b.x + nx, b.y + ny);
+    ctx.lineTo(t.x + nx, t.y + ny);
+    ctx.stroke();
+    ctx.restore();
+
+    // Rungs
+    const rungs = Math.max(3, Math.round(len / (cell * 0.55)));
+    for (let r = 1; r < rungs; r++) {
+      const t2 = r / rungs;
+      const rx = b.x + dx * t2;
+      const ry = b.y + dy * t2;
+      ctx.beginPath();
+      ctx.moveTo(rx - nx * 1.1, ry - ny * 1.1);
+      ctx.lineTo(rx + nx * 1.1, ry + ny * 1.1);
+      ctx.strokeStyle = lc.rung; ctx.lineWidth = cell * 0.055;
+      ctx.lineCap = 'round'; ctx.stroke();
+    }
+
+    // Ladder endpoint circles
+    [b, t].forEach(pt => {
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, cell * 0.12, 0, Math.PI*2);
+      ctx.fillStyle = lc.rail; ctx.fill();
+    });
+
+    // Ladder emoji label at bottom
+    ctx.font = `${cell * 0.28}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🪜', b.x, b.y + cell * 0.28);
+  });
+
+  // ── Draw Snakes ──
+  const snakeEntries = Object.entries(SNAKES);
+  snakeEntries.forEach(([head, tail], si) => {
+    const sc = SNAKE_COLORS[si % SNAKE_COLORS.length];
+    const h = snlSquareToXY(+head, sz);
+    const tl = snlSquareToXY(+tail, sz);
+
+    const dx = tl.x - h.x, dy = tl.y - h.y;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const midX = (h.x + tl.x) / 2 + (dy / len) * cell * 0.8;
+    const midY = (h.y + tl.y) / 2 - (dx / len) * cell * 0.8;
+
+    // Body gradient
+    const grad = ctx.createLinearGradient(h.x, h.y, tl.x, tl.y);
+    grad.addColorStop(0, sc.body);
+    grad.addColorStop(0.5, sc.dark);
+    grad.addColorStop(1, sc.body + 'bb');
+
+    // Glow
+    ctx.save();
+    ctx.shadowColor = sc.body; ctx.shadowBlur = 12;
+
+    // Body — curved bezier
+    ctx.beginPath();
+    ctx.moveTo(h.x, h.y);
+    ctx.quadraticCurveTo(midX, midY, tl.x, tl.y);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = cell * 0.14;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Scale pattern (dashes)
+    ctx.setLineDash([cell * 0.08, cell * 0.06]);
+    ctx.strokeStyle = sc.dark + 'aa';
+    ctx.lineWidth = cell * 0.08;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // Head circle
+    ctx.beginPath(); ctx.arc(h.x, h.y, cell * 0.18, 0, Math.PI*2);
+    ctx.fillStyle = sc.body; ctx.fill();
+    ctx.strokeStyle = sc.dark; ctx.lineWidth = 2; ctx.stroke();
+
+    // Eyes
+    const eyeAngle = Math.atan2(dy, dx);
+    const eo = cell * 0.07;
+    [-1, 1].forEach(side => {
+      const ex = h.x + Math.cos(eyeAngle + side * Math.PI/2) * eo;
+      const ey = h.y + Math.sin(eyeAngle + side * Math.PI/2) * eo;
+      ctx.beginPath(); ctx.arc(ex, ey, cell * 0.04, 0, Math.PI*2);
+      ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.beginPath(); ctx.arc(ex + Math.cos(eyeAngle) * cell * 0.02, ey + Math.sin(eyeAngle) * cell * 0.02, cell * 0.022, 0, Math.PI*2);
+      ctx.fillStyle = '#000'; ctx.fill();
+    });
+
+    // Tongue
+    const tx = h.x + Math.cos(eyeAngle) * cell * 0.22;
+    const ty = h.y + Math.sin(eyeAngle) * cell * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(h.x + Math.cos(eyeAngle) * cell * 0.18, h.y + Math.sin(eyeAngle) * cell * 0.18);
+    ctx.lineTo(tx, ty);
+    ctx.strokeStyle = '#ff3366'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Forked tips
+    const fa = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx + Math.cos(eyeAngle - fa) * cell * 0.07, ty + Math.sin(eyeAngle - fa) * cell * 0.07);
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx + Math.cos(eyeAngle + fa) * cell * 0.07, ty + Math.sin(eyeAngle + fa) * cell * 0.07);
+    ctx.stroke();
+
+    // Tail circle
+    ctx.beginPath(); ctx.arc(tl.x, tl.y, cell * 0.1, 0, Math.PI*2);
+    ctx.fillStyle = sc.body + '88'; ctx.fill();
+  });
+
+  // Start and Finish labels
+  const startPos = snlSquareToXY(1, sz);
+  const endPos   = snlSquareToXY(100, sz);
+  ctx.font = `bold ${cell * 0.22}px Outfit, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillStyle = '#6af7c8'; ctx.fillText('START', startPos.x, startPos.y + cell * 0.38);
+  ctx.fillStyle = '#f0c060'; ctx.fillText('FINISH', endPos.x, endPos.y + cell * 0.38);
+
+  // ── Draw players ──
+  snl.players.forEach((pl, pi) => {
+    if (pl.pos === 0) return; // not started yet
+    const pos = snlSquareToXY(pl.pos, sz);
+    // Offset if multiple on same square
+    const sameSquare = snl.players.filter((p, i) => i !== pi && p.pos === pl.pos).length;
+    const offsets = [[0,0],[-cell*0.15,-cell*0.15],[cell*0.15,-cell*0.15],[-cell*0.15,cell*0.15]];
+    const off = offsets[pi];
+    const px = pos.x + off[0], py = pos.y + off[1];
+
+    // Glow
+    ctx.save();
+    ctx.shadowColor = pl.color; ctx.shadowBlur = 14;
+    // Token body
+    ctx.beginPath(); ctx.arc(px, py, cell * 0.22, 0, Math.PI*2);
+    ctx.fillStyle = pl.color; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
+    // Inner highlight
+    ctx.beginPath(); ctx.arc(px - cell*0.06, py - cell*0.06, cell*0.09, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fill();
+    ctx.restore();
+
+    // Player initial
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${cell * 0.18}px DM Mono, monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(pl.name[0], px, py + 1);
+  });
+
+  // Square 0 "waiting" tokens shown outside board
+  const waitY = sz - cell * 0.35;
+  snl.players.forEach((pl, pi) => {
+    if (pl.pos !== 0) return;
+    const wx = cell * (0.35 + pi * 0.8);
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.shadowColor = pl.color; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(wx, waitY, cell * 0.18, 0, Math.PI*2);
+    ctx.fillStyle = pl.color; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${cell*0.15}px DM Mono, monospace`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(pl.name[0], wx, waitY + 1);
+  });
+}
+
+// ── Colorful dice on canvas ──
+function snlDrawDice(value) {
+  const dc = document.getElementById('snl-dice-canvas');
+  if (!dc) return;
+  const ctx = dc.getContext('2d');
+  const sz = 80;
+  ctx.clearRect(0, 0, sz, sz);
+
+  // Dice face gradient — colorful based on value
+  const faceColors = [
+    ['#7c6af7','#9d8fff'],  // 1 - purple
+    ['#f76a8c','#ff9db5'],  // 2 - pink
+    ['#f0c060','#ffe09a'],  // 3 - gold
+    ['#6af7c8','#a8ffdf'],  // 4 - teal
+    ['#ff7e5f','#ffab8c'],  // 5 - orange
+    ['#4cc9f0','#a0e8ff'],  // 6 - sky blue
+  ];
+  const [c1, c2] = value > 0 ? faceColors[value - 1] : ['#2a2a3e','#3a3a55'];
+
+  const grad = ctx.createLinearGradient(0, 0, sz, sz);
+  grad.addColorStop(0, c1); grad.addColorStop(1, c2);
+
+  // Shadow
+  ctx.save();
+  ctx.shadowColor = c1; ctx.shadowBlur = 18;
+  // Dice body
+  ctx.beginPath(); ctx.roundRect(4, 4, sz-8, sz-8, 14); ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+
+  // Gloss highlight
+  const gloss = ctx.createLinearGradient(8, 8, 8, sz/2);
+  gloss.addColorStop(0, 'rgba(255,255,255,0.3)');
+  gloss.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath(); ctx.roundRect(8, 8, sz-16, sz/2-8, 8); ctx.fillStyle = gloss; ctx.fill();
+
+  if (value === 0) {
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = 'bold 22px Outfit';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🎲', sz/2, sz/2);
+    return;
+  }
+
+  // Dot positions for each face
+  const dots = {
+    1: [[.5,.5]],
+    2: [[.25,.25],[.75,.75]],
+    3: [[.25,.25],[.5,.5],[.75,.75]],
+    4: [[.25,.25],[.75,.25],[.25,.75],[.75,.75]],
+    5: [[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]],
+    6: [[.25,.25],[.75,.25],[.25,.5],[.75,.5],[.25,.75],[.75,.75]],
+  };
+
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  (dots[value] || []).forEach(([fx, fy]) => {
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,255,255,0.6)'; ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.arc(fx * sz, fy * sz, sz * 0.085, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── Roll ──
+function snlRollDice() {
+  if (snl.rolled || snl.gameOver || snl.animating) return;
+  snl.rolled = true;
+
+  playSnlDiceRoll();
+  let count = 0;
+  const interval = setInterval(() => {
+    const v = Math.floor(Math.random() * 6) + 1;
+    snlDrawDice(v);
+    count++;
+    if (count >= 10) {
+      clearInterval(interval);
+      const roll = Math.floor(Math.random() * 6) + 1;
+      snl.lastRoll = roll;
+      snlDrawDice(roll);
+
+      const p = snl.players[snl.current];
+      document.getElementById('snl-dice-result').textContent = `${p.name} rolled a ${roll}!`;
+      snlAddLog(`${p.name} rolled a ${roll}`);
+      snlMovePlayer(snl.current, roll);
+    }
+  }, 60);
+}
+
+function snlMovePlayer(pi, roll) {
+  const p = snl.players[pi];
+  const newPos = Math.min(p.pos + roll, 100);
+  snlAnimateMove(pi, p.pos, newPos, () => {
+    p.pos = newPos;
+    snlDrawBoard();
+
+    // Check snake or ladder
+    if (SNAKES[newPos] !== undefined) {
+      const dest = SNAKES[newPos];
+      playSnlSnakeSound();
+      snlAddLog(`🐍 ${p.name} hit a SNAKE on ${newPos}! Slides to ${dest} 😬`);
+      showToast(`🐍 ${p.name} got bitten! Back to ${dest}`);
+      setTimeout(() => {
+        snlAnimateMove(pi, newPos, dest, () => {
+          p.pos = dest;
+          snlDrawBoard();
+          snlAfterMove();
+        });
+      }, 400);
+    } else if (LADDERS[newPos] !== undefined) {
+      const dest = LADDERS[newPos];
+      playSnlLadderSound();
+      snlAddLog(`🪜 ${p.name} found a LADDER on ${newPos}! Climbs to ${dest} 🎉`);
+      showToast(`🪜 ${p.name} climbs to ${dest}!`);
+      setTimeout(() => {
+        snlAnimateMove(pi, newPos, dest, () => {
+          p.pos = dest;
+          snlDrawBoard();
+          snlAfterMove();
+        });
+      }, 400);
+    } else if (newPos === 100) {
+      snlWin(pi);
+    } else {
+      snlAfterMove();
+    }
+  });
+}
+
+function snlAnimateMove(pi, from, to, done) {
+  if (from === 0) { snl.players[pi].pos = 1; snlDrawBoard(); setTimeout(done, 100); return; }
+  snl.animating = true;
+  let cur = from;
+  const step = from < to ? 1 : -1;
+  const go = () => {
+    if (cur === to) { snl.animating = false; done(); return; }
+    cur += step;
+    snl.players[pi].pos = cur;
+    snlDrawBoard();
+    setTimeout(go, 80);
+  };
+  go();
+}
+
+function snlAfterMove() {
+  snl.rolled = false;
+  snl.current = (snl.current + 1) % snl.players.length;
+  snlUpdateUI();
+  const p = snl.players[snl.current];
+  document.getElementById('snl-dice-result').textContent = `${p.name}'s turn — click dice to roll`;
+  snlDrawDice(0);
+  snlAddLog(`--- ${p.name}'s turn ---`);
+}
+
+function snlWin(pi) {
+  snl.gameOver = true;
+  const p = snl.players[pi];
+  playAllHomeSound(); // reuse celebratory sound
+  snlAddLog(`🏆 ${p.name} reached 100 and WINS!`);
+  document.getElementById('win-emoji').textContent = '🏆';
+  document.getElementById('win-headline').innerHTML = `<em>${p.name}</em> Wins!`;
+  document.getElementById('win-badge').innerHTML = '🐍 Snake & Ladders Champion';
+  document.getElementById('win-message').textContent = `${p.name} reached square 100 first! Brilliant luck and skill!`;
+  document.getElementById('win-new-btn').onclick = () => { snlRestart(); closeWin(); };
+  setTimeout(() => { document.getElementById('win-overlay').classList.add('show'); launchConfetti(); }, 300);
+}
+
+function snlUpdateUI() {
+  const p = snl.players[snl.current];
+  document.getElementById('snl-turn-dot').style.background = p.color;
+  document.getElementById('snl-turn-dot').style.boxShadow = `0 0 8px ${p.color}`;
+  document.getElementById('snl-turn-name').textContent = p.name;
+
+  const list = document.getElementById('snl-player-list');
+  list.innerHTML = snl.players.map((pl, i) => `
+    <div class="player-status-row ${i === snl.current ? 'current-turn' : ''}">
+      <div class="ps-dot" style="background:${pl.color}"></div>
+      <div class="ps-name">${pl.name}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-dim);margin-left:auto;">${pl.pos}/100</div>
+    </div>
+  `).join('');
+}
+
+function snlAddLog(msg) {
+  const log = document.getElementById('snl-log');
+  if (!log) return;
+  const e = document.createElement('div');
+  e.className = 'log-entry'; e.textContent = msg;
+  log.insertBefore(e, log.firstChild);
+  while (log.children.length > 30) log.removeChild(log.lastChild);
+}
+
+// ── SNL Sounds ──
+function playSnlDiceRoll() {
+  try {
+    const ctx = getAudioCtx();
+    for (let i = 0; i < 8; i++) {
+      setTimeout(() => {
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let j = 0; j < d.length; j++) d[j] = (Math.random()*2-1)*0.25;
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.35, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700 + Math.random()*500;
+        src.connect(f); f.connect(g); g.connect(ctx.destination); src.start();
+      }, i * 55);
+    }
+    setTimeout(() => {
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.frequency.setValueAtTime(200, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.12);
+      g.gain.setValueAtTime(0.4, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + 0.18);
+    }, 560);
+  } catch(e) {}
+}
+
+function playSnlSnakeSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Descending hiss
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i / (ctx.sampleRate * 0.15));
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1200;
+    const gn = ctx.createGain(); gn.gain.value = 0.5;
+    src.connect(f); f.connect(gn); gn.connect(ctx.destination); src.start();
+    // Low whoosh
+    [400,300,200,120].forEach((freq, i) => {
+      setTimeout(() => {
+        const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
+        o2.type = 'sawtooth'; o2.frequency.value = freq;
+        g2.gain.setValueAtTime(0.2, ctx.currentTime); g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.2);
+        o2.connect(g2); g2.connect(ctx.destination); o2.start(); o2.stop(ctx.currentTime+0.2);
+      }, i * 100);
+    });
+  } catch(e) {}
+}
+
+function playSnlLadderSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Ascending happy notes
+    const notes = [392, 494, 587, 698, 880];
+    notes.forEach((freq, i) => {
+      setTimeout(() => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = freq;
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(0.35, ctx.currentTime+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.28);
+        o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.28);
+      }, i * 90);
+    });
+  } catch(e) {}
+}
+
+// ─── INIT ──────────────────────────────────────────────
 // Default player count = 3 selected, render inputs
 selectPlayerCount(3, document.querySelector('.pc-btn[data-n="3"]'));
+snlSelectPlayers(3, document.querySelector('.pc-btn[data-sn="3"]'));
 newGame(); // start Sudoku
 </script>
 </body>
