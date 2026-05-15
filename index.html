@@ -854,6 +854,7 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
           <button class="action-btn" onclick="resetGame()"><span>↺</span> Reset</button>
           <button class="action-btn" onclick="undoMove()"><span>⤺</span> Undo</button>
           <button class="action-btn danger" onclick="clearSelected()"><span>⌫</span> Erase</button>
+          <button class="action-btn" id="sudoku-result-share-btn" onclick="shareSudokuResult()" style="display:none;"><span>↗</span> Share Result</button>
         </div>
       </div>
       <div class="panel-card">
@@ -1393,6 +1394,7 @@ function createPuzzle(sol,clues){const p=sol.map(r=>[...r]);const cells=shuffle(
 
 function newGame(){
   gameOver=false;moves=0;history=[];timerSec=0;clearInterval(timerInterval);timerInterval=setInterval(tickTimer,1000);updateTimerDisplay();updateMovesDisplay();
+  const sudokuShareBtn=document.getElementById('sudoku-result-share-btn');if(sudokuShareBtn)sudokuShareBtn.style.display='none';
   solution=generateSudoku();const puzzle=createPuzzle(solution,CLUES[difficulty]);
   board=puzzle.map(r=>[...r]);fixed=puzzle.map(r=>r.map(v=>v!==0));notes=Array.from({length:9},()=>Array.from({length:9},()=>new Set()));selected=null;
   renderGrid();updateRemaining();updateDiffBadge();
@@ -1431,6 +1433,7 @@ function checkWin(){
   const timeStr=document.getElementById('timer').textContent;
   const[mm,ss]=timeStr.split(':').map(Number);const totalSec=mm*60+ss;
   saveScore({difficulty,timeSeconds:totalSec,moves,date:new Date().toISOString()});
+  const sudokuShareBtn=document.getElementById('sudoku-result-share-btn');if(sudokuShareBtn)sudokuShareBtn.style.display='';
   document.getElementById('win-emoji').textContent='🏆';
   document.getElementById('win-headline').innerHTML='Puzzle <em>Solved!</em>';
   document.getElementById('win-badge').innerHTML='⚡ Excellent Work';
@@ -1444,6 +1447,92 @@ function updateTimerDisplay(){const m=Math.floor(timerSec/60),s=timerSec%60;docu
 function updateMovesDisplay(){document.getElementById('moves-display').textContent=moves;}
 function updateRemaining(){const counts=Array(10).fill(0);for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]>0)counts[board[r][c]]++;for(let n=1;n<=9;n++){const el=document.getElementById('r'+n);if(el)el.textContent=(9-counts[n])>0?(9-counts[n]):'';}updateProgress();}
 function updateProgress(){let filled=0;for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]===solution[r][c])filled++;const progress=Math.round((filled/81)*100);const fill=document.getElementById('progress-fill');const text=document.getElementById('progress-text');if(fill)fill.style.width=progress+'%';if(text)text.textContent=filled+'/81 cells ('+progress+'%)';}
+
+function getSudokuResultText(){
+  return `🔢 SUDOKU — Puzzle Solved!
+🎚 Level: ${difficulty.toUpperCase()}
+👣 Moves: ${moves}
+⏱ Time: ${formatTime(timerSec)}
+📅 ${new Date().toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'})}
+Played on Game Hub`;
+}
+
+function createSudokuSnapshotBlob(){
+  return new Promise(resolve=>{
+    const width=900,height=1040,pad=54,topPad=170,cell=(width-pad*2)/9,gridTop=topPad;
+    const canvas=document.createElement('canvas');
+    canvas.width=width;canvas.height=height;
+    const ctx=canvas.getContext('2d');
+    const isLight=document.body.classList.contains('light');
+    ctx.fillStyle=isLight?'#f4f4f8':'#0c0c0f';
+    ctx.fillRect(0,0,width,height);
+    ctx.fillStyle=isLight?'#1a1a2e':'#f0f0f8';
+    ctx.font='bold 44px Outfit, sans-serif';
+    ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText('Sudoku Completed',pad,34);
+    const stats=[
+      {label:'LEVEL',value:difficulty.toUpperCase()},
+      {label:'MOVES',value:String(moves)},
+      {label:'TIME',value:formatTime(timerSec)}
+    ];
+    const statW=(width-pad*2-24)/3;
+    stats.forEach((stat,i)=>{
+      const x=pad+i*(statW+12),y=92;
+      ctx.fillStyle=isLight?'#ffffff':'#13131a';
+      ctx.strokeStyle='rgba(124,106,247,0.38)';
+      ctx.lineWidth=2;
+      ctx.beginPath();ctx.roundRect(x,y,statW,44,10);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(124,106,247,0.82)';
+      ctx.font='bold 11px Outfit, sans-serif';
+      ctx.textAlign='left';ctx.textBaseline='middle';
+      ctx.fillText(stat.label,x+16,y+22);
+      ctx.fillStyle=isLight?'#1a1a2e':'#f0f0f8';
+      ctx.font='bold 20px DM Mono, monospace';
+      ctx.textAlign='right';
+      ctx.fillText(stat.value,x+statW-16,y+22);
+    });
+    ctx.fillStyle=isLight?'#ffffff':'#16161f';
+    ctx.strokeStyle='#7c6af7';
+    ctx.lineWidth=4;
+    ctx.beginPath();ctx.roundRect(pad,gridTop,cell*9,cell*9,18);ctx.fill();ctx.stroke();
+    for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+      const x=pad+c*cell,y=gridTop+r*cell;
+      ctx.fillStyle=fixed[r][c]?(isLight?'#f7f6ff':'#111118'):(isLight?'#ffffff':'#16161f');
+      ctx.fillRect(x,y,cell,cell);
+      ctx.fillStyle=fixed[r][c]?(isLight?'#1a1a2e':'#e8e0ff'):'#7c6af7';
+      ctx.font=`600 ${cell*0.48}px DM Mono, monospace`;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(board[r][c]||'',x+cell/2,y+cell/2+2);
+    }
+    for(let i=0;i<=9;i++){
+      ctx.beginPath();
+      ctx.strokeStyle=i%3===0?'rgba(124,106,247,0.9)':(isLight?'rgba(0,0,0,0.12)':'rgba(255,255,255,0.12)');
+      ctx.lineWidth=i%3===0?4:1;
+      ctx.moveTo(pad+i*cell,gridTop);ctx.lineTo(pad+i*cell,gridTop+cell*9);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(pad,gridTop+i*cell);ctx.lineTo(pad+cell*9,gridTop+i*cell);ctx.stroke();
+    }
+    ctx.fillStyle='rgba(124,106,247,0.75)';
+    ctx.font='bold 24px Outfit, sans-serif';
+    ctx.textAlign='right';ctx.textBaseline='bottom';
+    ctx.fillText('GAME HUB',width-42,height-24);
+    canvas.toBlob(blob=>resolve(blob),'image/png');
+  });
+}
+
+async function shareSudokuResult(){
+  const shareData={title:'Sudoku — Game Hub',text:getSudokuResultText()};
+  if(navigator.share){
+    try{
+      const blob=await createSudokuSnapshotBlob();
+      const file=new File([blob],`sudoku_${difficulty}_${formatTime(timerSec).replace(':','-')}.png`,{type:'image/png'});
+      if(navigator.canShare&&navigator.canShare({files:[file]}))shareData.files=[file];
+    }catch(e){}
+    try{await navigator.share(shareData);return;}
+    catch(e){if(e.name==='AbortError')return;}
+  }
+  try{await navigator.clipboard.writeText(shareData.text);showToast('Sudoku result copied to clipboard!');}
+  catch(e){showToast('Share not available');}
+}
 
 // Leaderboard
 const LEADERBOARD_KEY='sudoku-leaderboard';
