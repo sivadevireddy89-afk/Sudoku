@@ -596,6 +596,82 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
 .log-entry:last-child { border-bottom: none; }
 .log-entry .log-name { font-weight: 600; }
 
+/* Sudoku pause state */
+.sudoku-paused .sudoku-grid {
+  filter: blur(3px) brightness(0.55);
+  pointer-events: none;
+  transition: filter 0.3s;
+}
+.sudoku-paused .num-btn {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.sudoku-paused #sudoku-pause-btn span { content: '▶'; }
+
+#sudoku-pause-btn.paused {
+  border-color: var(--accent3);
+  color: var(--accent3);
+  background: rgba(106,247,200,0.08);
+}
+#sudoku-pause-btn.paused:hover {
+  background: rgba(106,247,200,0.16);
+  box-shadow: 0 4px 16px rgba(106,247,200,0.25);
+}
+
+/* Ludo pause state */
+.ludo-paused #ludo-svg {
+  filter: blur(3px) brightness(0.55);
+  pointer-events: none;
+  transition: filter 0.3s;
+}
+.ludo-paused .dice-btn {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.ludo-paused #ludo-pause-btn span { content: '▶'; }
+
+#ludo-pause-btn.paused {
+  border-color: var(--accent3);
+  color: var(--accent3);
+  background: rgba(106,247,200,0.08);
+}
+#ludo-pause-btn.paused:hover {
+  background: rgba(106,247,200,0.16);
+  box-shadow: 0 4px 16px rgba(106,247,200,0.25);
+}
+
+/* Ludo win share buttons */
+.ludo-share-btn {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border-bright);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ludo-share-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(124,106,247,0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(124,106,247,0.25);
+}
+.ludo-share-btn.success {
+  border-color: var(--accent3);
+  color: var(--accent3);
+  background: rgba(106,247,200,0.1);
+}
+
 /* Ludo action buttons */
 .ludo-action-btns { display: flex; flex-direction: column; gap: 6px; }
 
@@ -774,6 +850,7 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
         <div class="panel-title">Actions</div>
         <div class="action-btns">
           <button class="action-btn primary" onclick="newGame()"><span>✦</span> New Game</button>
+          <button class="action-btn" id="sudoku-pause-btn" onclick="sudokuPause()"><span>⏸</span> Pause</button>
           <button class="action-btn" onclick="resetGame()"><span>↺</span> Reset</button>
           <button class="action-btn" onclick="undoMove()"><span>⤺</span> Undo</button>
           <button class="action-btn danger" onclick="clearSelected()"><span>⌫</span> Erase</button>
@@ -872,6 +949,7 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
           </div>
 
           <div class="ludo-action-btns">
+            <button class="action-btn" id="ludo-pause-btn" onclick="ludoPause()"><span>⏸</span> Pause</button>
             <button class="action-btn primary" onclick="restartLudo()"><span>↺</span> New Game</button>
           </div>
         </div>
@@ -886,6 +964,63 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
           <div style="font-size:12px;color:var(--text-muted);text-align:center;">Click a highlighted token to move it</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUDOKU PAUSE OVERLAY -->
+<div class="overlay" id="sudoku-pause-overlay" onclick="if(event.target===this)sudokuResume()">
+  <div class="win-card" style="max-width:380px;">
+    <div class="win-rainbow-bar"></div>
+    <div class="win-body" style="padding:32px 36px 36px;">
+
+      <div style="font-size:56px;margin-bottom:8px;filter:drop-shadow(0 0 18px rgba(124,106,247,0.6));animation:burstIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;">⏸</div>
+
+      <div class="win-headline" style="animation:none;opacity:1;transform:none;margin-bottom:6px;">Game <em>Paused</em></div>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:24px;line-height:1.6;">Take a break. The timer is stopped.<br>Resume when you're ready.</p>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="win-btn" onclick="sudokuResume()" style="font-size:15px;padding:14px;">
+          ▶ Resume Game
+        </button>
+        <button class="win-btn secondary" onclick="newGame();sudokuResume()" style="font-size:13px;">
+          ↺ New Game
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- LUDO PAUSE OVERLAY -->
+<div class="overlay" id="ludo-pause-overlay" onclick="if(event.target===this)ludoResume()">
+  <div class="win-card" style="max-width:380px;">
+    <div class="win-rainbow-bar"></div>
+    <div class="win-body" style="padding:32px 36px 36px;">
+
+      <div style="font-size:56px;margin-bottom:8px;filter:drop-shadow(0 0 18px rgba(124,106,247,0.6));animation:burstIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;">⏸</div>
+
+      <div class="win-headline" style="animation:none;opacity:1;transform:none;margin-bottom:6px;">Game <em>Paused</em></div>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:24px;line-height:1.6;">Take a break. The board is frozen.<br>Resume when you're ready.</p>
+
+      <!-- Current turn reminder -->
+      <div id="pause-turn-reminder" style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:24px;">
+        <div id="pause-turn-dot" style="width:12px;height:12px;border-radius:50%;flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);" id="pause-turn-text">Player's turn</div>
+          <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);">Waiting to resume</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="win-btn" onclick="ludoResume()" style="font-size:15px;padding:14px;">
+          ▶ Resume Game
+        </button>
+        <button class="win-btn secondary" onclick="restartLudo();ludoResume()" style="font-size:13px;">
+          ↺ New Game
+        </button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1059,7 +1194,7 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
   </div>
 </div>
 
-<!-- WIN OVERLAY -->
+<!-- WIN OVERLAY (generic — Sudoku / SNL) -->
 <div class="overlay" id="win-overlay">
   <div class="win-card">
     <div class="win-rainbow-bar"></div>
@@ -1075,6 +1210,49 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
         <button class="win-btn secondary" onclick="closeWin()">Close</button>
         <button class="win-btn" id="win-new-btn" onclick="newGame();closeWin()">New Game</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- LUDO WIN OVERLAY (with screenshot + share) -->
+<div class="overlay" id="ludo-win-overlay" onclick="if(event.target===this)closeLudoWin()">
+  <div class="win-card" style="max-width:520px;">
+    <div class="win-rainbow-bar"></div>
+    <div class="win-body" style="padding:28px 32px 32px;">
+
+      <div class="win-burst">
+        <div class="win-ring"></div><div class="win-ring"></div><div class="win-ring"></div>
+        <span class="win-burst-emoji" id="ludo-win-emoji">🏆</span>
+      </div>
+
+      <div class="win-headline" id="ludo-win-headline">Player <em>Wins!</em></div>
+      <div class="win-badge" id="ludo-win-badge">🎲 Ludo Champion</div>
+      <p class="win-message" id="ludo-win-message">All 4 tokens raced home!</p>
+
+      <!-- Board snapshot preview -->
+      <div id="ludo-snapshot-wrap" style="margin:0 auto 20px;display:none;">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Board Snapshot</div>
+        <canvas id="ludo-snapshot-canvas" style="width:100%;border-radius:12px;border:1px solid var(--border-bright);box-shadow:0 4px 20px rgba(0,0,0,0.3);display:block;"></canvas>
+      </div>
+
+      <!-- Action buttons row -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="ludo-win-actions">
+        <button class="ludo-share-btn" id="ludo-screenshot-btn" onclick="ludoTakeScreenshot()">
+          <span>📸</span> Screenshot
+        </button>
+        <button class="ludo-share-btn" id="ludo-copy-btn" onclick="ludoCopyResult()">
+          <span>📋</span> Copy Result
+        </button>
+        <button class="ludo-share-btn" id="ludo-share-btn" onclick="ludoShareResult()" style="display:none;">
+          <span>↗</span> Share
+        </button>
+      </div>
+
+      <div class="win-btns">
+        <button class="win-btn secondary" onclick="closeLudoWin()">Close</button>
+        <button class="win-btn" onclick="restartLudo();closeLudoWin()">New Game</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1153,7 +1331,7 @@ function toggleTheme() {
 function closeHTP() { document.getElementById('htp-overlay').classList.remove('show'); }
 function openHTP() { document.getElementById('htp-overlay').classList.add('show'); }
 function closeLudoHTP() { document.getElementById('ludo-htp-overlay').classList.remove('show'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeHTP(); closeLudoHTP(); closeWin(); closeLeaderboard(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeHTP(); closeLudoHTP(); closeWin(); closeLudoWin(); closeLeaderboard(); if (ludo.paused) ludoResume(); if (sudokuPaused) sudokuResume(); } });
 
 // Toast
 function showToast(msg) {
@@ -1203,7 +1381,7 @@ function closeWin() { document.getElementById('win-overlay').classList.remove('s
 // ═══════════════════════════════════════════════════════
 // SUDOKU ENGINE
 // ═══════════════════════════════════════════════════════
-let board=[],solution=[],fixed=[],notes=[],selected=null,moves=0,difficulty='easy',notesMode=false,timerSec=0,timerInterval=null,history=[],gameOver=false;
+let board=[],solution=[],fixed=[],notes=[],selected=null,moves=0,difficulty='easy',notesMode=false,timerSec=0,timerInterval=null,history=[],gameOver=false,sudokuPaused=false;
 const CLUES={easy:40,medium:30,hard:22};
 
 function generateSudoku(){const g=Array.from({length:9},()=>Array(9).fill(0));solveSudoku(g,true);return g;}
@@ -1225,7 +1403,7 @@ function updateDiffBadge(){const badge=document.getElementById('diff-badge');bad
 function renderGrid(){const grid=document.getElementById('grid');grid.innerHTML='';for(let r=0;r<9;r++)for(let c=0;c<9;c++){const cell=document.createElement('div');cell.className='cell'+(fixed[r][c]?' fixed':'');cell.dataset.r=r;cell.dataset.c=c;setCellContent(cell,r,c);cell.addEventListener('click',()=>selectCell(r,c));grid.appendChild(cell);}highlightSelected();}
 function setCellContent(cell,r,c){const val=board[r][c];const ns=notes[r][c];cell.innerHTML='';if(val!==0){cell.classList.remove('user-filled','error');if(!fixed[r][c])cell.classList.add('user-filled');const span=document.createElement('span');span.className='num-val';span.textContent=val;cell.appendChild(span);}else if(ns.size>0){const ng=document.createElement('div');ng.className='notes-grid';for(let n=1;n<=9;n++){const nd=document.createElement('div');nd.className='note';nd.textContent=ns.has(n)?n:'';ng.appendChild(nd);}cell.appendChild(ng);}}
 function updateCell(r,c){const cells=document.querySelectorAll('.cell');const cell=cells[r*9+c];if(!cell)return;setCellContent(cell,r,c);highlightSelected();}
-function selectCell(r,c){selected={r,c};highlightSelected();}
+function selectCell(r,c){if(sudokuPaused)return;selected={r,c};highlightSelected();}
 function highlightSelected(){const cells=document.querySelectorAll('.cell');cells.forEach(cell=>{const r=+cell.dataset.r,c=+cell.dataset.c;cell.classList.remove('selected','same-num','same-row-col','error');if(board[r][c]!==0&&solution[r][c]!==board[r][c]&&!fixed[r][c])cell.classList.add('error');});if(!selected)return;const{r:sr,c:sc}=selected;const selVal=board[sr][sc];cells.forEach(cell=>{const r=+cell.dataset.r,c=+cell.dataset.c;if(r===sr&&c===sc){cell.classList.add('selected');return;}const sameBox=Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3);if(r===sr||c===sc||sameBox)cell.classList.add('same-row-col');if(selVal!==0&&board[r][c]===selVal)cell.classList.add('same-num');});}
 
 function enterNum(n){if(!selected||gameOver)return;const{r,c}=selected;if(fixed[r][c])return;if(notesMode&&board[r][c]===0){const ns=notes[r][c];ns.has(n)?ns.delete(n):ns.add(n);updateCell(r,c);return;}if(board[r][c]===n)return;history.push({r,c,prev:board[r][c],prevNotes:new Set(notes[r][c])});notes[r][c].clear();board[r][c]=n;moves++;updateMovesDisplay();updateCell(r,c);updateRemaining();if(n===solution[r][c])checkWin();}
@@ -1260,7 +1438,7 @@ function checkWin(){
   setTimeout(()=>{document.getElementById('win-overlay').classList.add('show');launchConfetti();},400);
 }
 
-function tickTimer(){timerSec++;updateTimerDisplay();}
+function tickTimer(){if(!sudokuPaused){timerSec++;updateTimerDisplay();}}
 function updateTimerDisplay(){const m=Math.floor(timerSec/60),s=timerSec%60;document.getElementById('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
 function updateMovesDisplay(){document.getElementById('moves-display').textContent=moves;}
 function updateRemaining(){const counts=Array(10).fill(0);for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]>0)counts[board[r][c]]++;for(let n=1;n<=9;n++){const el=document.getElementById('r'+n);if(el)el.textContent=(9-counts[n])>0?(9-counts[n]):'';}updateProgress();}
@@ -1276,6 +1454,40 @@ function filterLeaderboard(filter,btn){document.querySelectorAll('.lb-tab').forE
 function renderLeaderboard(filter){const lb=getLeaderboard();const filtered=filter==='all'?lb:lb.filter(s=>s.difficulty===filter);const container=document.getElementById('leaderboard-rows');if(filtered.length===0){container.innerHTML='<div class="lb-empty">No scores yet.</div>';return;}container.innerHTML=filtered.map((score,i)=>{const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';const date=new Date(score.date).toLocaleDateString();const timeStr=formatTime(score.timeSeconds);return`<div class="lb-row"><span class="lb-rank ${rankClass}">${i+1}</span><span class="lb-diff ${score.difficulty}">${score.difficulty}</span><span class="lb-time">${timeStr}</span><span class="lb-moves">${score.moves}</span><span class="lb-date">${date}</span></div>`;}).join('');}
 function clearLeaderboard(){if(confirm('Clear all scores?')){localStorage.removeItem(LEADERBOARD_KEY);renderLeaderboard('all');showToast('Leaderboard cleared');}}
 function formatTime(seconds){const m=Math.floor(seconds/60),s=seconds%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+
+// Sudoku pause/resume
+function sudokuPause(){
+  if(gameOver)return;
+  sudokuPaused=true;
+  
+  // Update button
+  const btn=document.getElementById('sudoku-pause-btn');
+  btn.innerHTML='<span>▶</span> Resume';
+  btn.classList.add('paused');
+  btn.onclick=sudokuResume;
+  
+  // Blur the board
+  document.getElementById('content-sudoku').classList.add('sudoku-paused');
+  
+  // Show overlay
+  document.getElementById('sudoku-pause-overlay').classList.add('show');
+}
+
+function sudokuResume(){
+  sudokuPaused=false;
+  
+  // Restore button
+  const btn=document.getElementById('sudoku-pause-btn');
+  btn.innerHTML='<span>⏸</span> Pause';
+  btn.classList.remove('paused');
+  btn.onclick=sudokuPause;
+  
+  // Unblur board
+  document.getElementById('content-sudoku').classList.remove('sudoku-paused');
+  
+  // Hide overlay
+  document.getElementById('sudoku-pause-overlay').classList.remove('show');
+}
 
 // ═══════════════════════════════════════════════════════
 // LUDO SOUNDS (Web Audio API)
@@ -1453,7 +1665,91 @@ let ludo = {
   diceValue: null,
   diceRolled: false,
   gameOver: false,
+  paused: false,
+  moves: 0,
+  timerSec: 0,
+  timerInterval: null,
 };
+
+function ludoFormatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function startLudoTimer() {
+  clearInterval(ludo.timerInterval);
+  if (!ludo.gameOver && !ludo.paused) {
+    ludo.timerInterval = setInterval(() => {
+      ludo.timerSec++;
+    }, 1000);
+  }
+}
+
+function stopLudoTimer() {
+  clearInterval(ludo.timerInterval);
+  ludo.timerInterval = null;
+}
+
+function getLudoLevelLabel() {
+  return ludo.players.length + ' Player Game';
+}
+
+function getLudoResultText() {
+  const winner = window._ludoWinner;
+  const players = ludo.players.map(p => p.name).join(', ');
+  return `🎲 LUDO — Game Over!
+🏆 Winner: ${winner?.name || '?'}
+🎚 Level: ${getLudoLevelLabel()}
+👣 Moves: ${ludo.moves}
+⏱ Time: ${ludoFormatTime(ludo.timerSec)}
+👥 Players: ${players}
+📅 ${new Date().toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' })}
+Played on Game Hub`;
+}
+
+function ludoCreateSnapshotBlob() {
+  return new Promise((resolve, reject) => {
+    const svg = document.getElementById('ludo-svg');
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+
+    img.onload = () => {
+      const size = Math.min(svg.getBoundingClientRect().width || 500, 500);
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = document.body.classList.contains('light') ? '#f4f4f8' : '#0c0c0f';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, 14);
+      ctx.fill();
+      ctx.drawImage(img, 0, 0, size, size);
+
+      ctx.fillStyle = 'rgba(124,106,247,0.65)';
+      ctx.font = `bold ${size * 0.028}px Outfit, sans-serif`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`GAME HUB · ${ludo.moves} MOVES · ${ludoFormatTime(ludo.timerSec)}`, size - 8, size - 6);
+
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error('Could not create image'));
+      }, 'image/png');
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not load board image'));
+    };
+
+    img.src = url;
+  });
+}
 
 function selectPlayerCount(n, btn) {
   ludoNumPlayers = n;
@@ -1507,6 +1803,10 @@ function startLudo() {
   ludo.diceValue = null;
   ludo.diceRolled = false;
   ludo.gameOver = false;
+  ludo.paused = false;
+  ludo.moves = 0;
+  ludo.timerSec = 0;
+  startLudoTimer();
 
   document.getElementById('ludo-setup').style.display = 'none';
   document.getElementById('ludo-game').style.display = '';
@@ -1518,15 +1818,60 @@ function startLudo() {
 
 function restartLudo() {
   ludoGameStarted = false;
+  ludo.paused = false;
+  stopLudoTimer();
   document.getElementById('ludo-setup').style.display = '';
   document.getElementById('ludo-game').style.display = 'none';
+  document.getElementById('ludo-game').classList.remove('ludo-paused');
   renderPlayerNameInputs();
+}
+
+function ludoPause() {
+  if (ludo.gameOver) return;
+  ludo.paused = true;
+  stopLudoTimer();
+
+  // Update button
+  const btn = document.getElementById('ludo-pause-btn');
+  btn.innerHTML = '<span>▶</span> Resume';
+  btn.classList.add('paused');
+  btn.onclick = ludoResume;
+
+  // Blur the board
+  document.getElementById('ludo-game').classList.add('ludo-paused');
+
+  // Fill pause overlay with current turn info
+  const p = ludo.players[ludo.currentPlayer];
+  if (p) {
+    document.getElementById('pause-turn-dot').style.background = p.color;
+    document.getElementById('pause-turn-dot').style.boxShadow = `0 0 8px ${p.color}`;
+    document.getElementById('pause-turn-text').textContent = `${p.name}'s turn`;
+  }
+
+  document.getElementById('ludo-pause-overlay').classList.add('show');
+  addLog('⏸ Game paused.');
+}
+
+function ludoResume() {
+  ludo.paused = false;
+  startLudoTimer();
+
+  // Restore button
+  const btn = document.getElementById('ludo-pause-btn');
+  btn.innerHTML = '<span>⏸</span> Pause';
+  btn.classList.remove('paused');
+  btn.onclick = ludoPause;
+
+  // Unblur board
+  document.getElementById('ludo-game').classList.remove('ludo-paused');
+  document.getElementById('ludo-pause-overlay').classList.remove('show');
+  addLog('▶ Game resumed!');
 }
 
 const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
 function rollDice() {
-  if (ludo.diceRolled || ludo.gameOver) return;
+  if (ludo.diceRolled || ludo.gameOver || ludo.paused) return;
   const diceEl = document.getElementById('dice-display');
   diceEl.classList.add('rolling');
 
@@ -1577,13 +1922,14 @@ function getMovableTokens(playerIdx, diceVal) {
 }
 
 function moveToken(playerIdx, tokenIdx) {
-  if (!ludo.diceRolled || ludo.gameOver) return;
+  if (!ludo.diceRolled || ludo.gameOver || ludo.paused) return;
   const val = ludo.diceValue;
   const movable = getMovableTokens(playerIdx, val);
   if (!movable.includes(tokenIdx)) return;
 
   const player = ludo.players[playerIdx];
   const token = player.tokens[tokenIdx];
+  ludo.moves++;
 
   if (token.isStart) {
     // Place on board at starting position
@@ -1635,6 +1981,7 @@ function moveToken(playerIdx, tokenIdx) {
   // Check win
   if (checkLudoWin(playerIdx)) {
     ludo.gameOver = true;
+    stopLudoTimer();
     drawBoard();
     setTimeout(() => showLudoWin(player), 500);
     return;
@@ -1670,12 +2017,131 @@ function nextTurn(skipAnimation) {
 }
 
 function showLudoWin(player) {
-  document.getElementById('win-emoji').textContent = '🏆';
-  document.getElementById('win-headline').innerHTML = `<em>${player.name}</em> Wins!`;
-  document.getElementById('win-badge').innerHTML = '🎲 Ludo Champion';
-  document.getElementById('win-message').textContent = `${player.name} raced all 4 tokens home first. Brilliant strategy!`;
-  document.getElementById('win-new-btn').onclick = () => { restartLudo(); closeWin(); };
-  setTimeout(() => { document.getElementById('win-overlay').classList.add('show'); launchConfetti(); }, 300);
+  document.getElementById('ludo-win-emoji').textContent = '🏆';
+  document.getElementById('ludo-win-headline').innerHTML = `<em>${player.name}</em> Wins!`;
+  document.getElementById('ludo-win-badge').innerHTML = '🎲 Ludo Champion';
+  document.getElementById('ludo-win-message').textContent =
+    `${player.name} raced all 4 tokens home first. Moves: ${ludo.moves} · Time: ${ludoFormatTime(ludo.timerSec)} · Level: ${getLudoLevelLabel()}.`;
+
+  // Show Share button only if Web Share API available
+  const shareBtn = document.getElementById('ludo-share-btn');
+  if (navigator.share) shareBtn.style.display = '';
+
+  // Reset screenshot area
+  document.getElementById('ludo-snapshot-wrap').style.display = 'none';
+  document.getElementById('ludo-screenshot-btn').innerHTML = '<span>📸</span> Screenshot';
+  document.getElementById('ludo-screenshot-btn').classList.remove('success');
+  document.getElementById('ludo-copy-btn').innerHTML = '<span>📋</span> Copy Result';
+  document.getElementById('ludo-copy-btn').classList.remove('success');
+
+  // Store winner ref for share functions
+  window._ludoWinner = player;
+
+  setTimeout(() => {
+    document.getElementById('ludo-win-overlay').classList.add('show');
+    launchConfetti();
+  }, 300);
+}
+
+function closeLudoWin() {
+  document.getElementById('ludo-win-overlay').classList.remove('show');
+  stopConfetti();
+}
+
+function ludoTakeScreenshot() {
+  const btn = document.getElementById('ludo-screenshot-btn');
+  btn.innerHTML = '<span>⏳</span> Capturing…';
+
+  const svg = document.getElementById('ludo-svg');
+  const wrap = document.getElementById('ludo-snapshot-wrap');
+  const snapCanvas = document.getElementById('ludo-snapshot-canvas');
+
+  // Serialise SVG → data URL
+  const svgData = new XMLSerializer().serializeToString(svg);
+  const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = () => {
+    const size = Math.min(svg.getBoundingClientRect().width || 500, 500);
+    snapCanvas.width = size;
+    snapCanvas.height = size;
+    const ctx = snapCanvas.getContext('2d');
+
+    // Dark background behind svg
+    ctx.fillStyle = document.body.classList.contains('light') ? '#f4f4f8' : '#0c0c0f';
+    ctx.beginPath(); ctx.roundRect(0, 0, size, size, 14); ctx.fill();
+    ctx.drawImage(img, 0, 0, size, size);
+
+    // Watermark
+    ctx.fillStyle = 'rgba(124,106,247,0.55)';
+    ctx.font = `bold ${size * 0.028}px Outfit, sans-serif`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`GAME HUB · ${ludo.moves} MOVES · ${ludoFormatTime(ludo.timerSec)}`, size - 8, size - 6);
+
+    URL.revokeObjectURL(url);
+    wrap.style.display = '';
+    btn.innerHTML = '<span>💾</span> Save Image';
+    btn.classList.add('success');
+
+    // On next click — download
+    btn.onclick = () => ludoDownloadSnapshot(snapCanvas, window._ludoWinner?.name);
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    btn.innerHTML = '<span>📸</span> Screenshot';
+    showToast('Screenshot failed — try again');
+  };
+  img.src = url;
+}
+
+function ludoDownloadSnapshot(canvas, winnerName) {
+  const link = document.createElement('a');
+  const safe = (winnerName || 'winner').replace(/[^a-z0-9]/gi, '_');
+  link.download = `ludo_${safe}_wins.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('Image saved! 🎉');
+}
+
+function ludoCopyResult() {
+  const btn = document.getElementById('ludo-copy-btn');
+  const text = getLudoResultText();
+
+  navigator.clipboard.writeText(text).then(() => {
+    btn.innerHTML = '<span>✅</span> Copied!';
+    btn.classList.add('success');
+    showToast('Result copied to clipboard!');
+    setTimeout(() => {
+      btn.innerHTML = '<span>📋</span> Copy Result';
+      btn.classList.remove('success');
+    }, 3000);
+  }).catch(() => {
+    showToast('Could not copy — try manually');
+  });
+}
+
+async function ludoShareResult() {
+  const winner = window._ludoWinner;
+  const shareData = {
+    title: 'Ludo — Game Hub',
+    text: getLudoResultText(),
+  };
+
+  try {
+    const blob = await ludoCreateSnapshotBlob();
+    const safeName = (winner?.name || 'winner').replace(/[^a-z0-9]/gi, '_');
+    const file = new File([blob], `ludo_${safeName}_result.png`, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      shareData.files = [file];
+    }
+  } catch(e) {}
+
+  try {
+    await navigator.share(shareData);
+  } catch(e) {
+    if (e.name !== 'AbortError') showToast('Share not available');
+  }
 }
 
 function updateLudoUI() {
