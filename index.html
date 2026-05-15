@@ -951,6 +951,7 @@ body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75
           <div class="ludo-action-btns">
             <button class="action-btn" id="ludo-pause-btn" onclick="ludoPause()"><span>⏸</span> Pause</button>
             <button class="action-btn primary" onclick="restartLudo()"><span>↺</span> New Game</button>
+            <button class="action-btn" id="ludo-result-share-btn" onclick="ludoShareResult()" style="display:none;"><span>↗</span> Share Result</button>
           </div>
         </div>
 
@@ -1807,6 +1808,8 @@ function startLudo() {
   ludo.moves = 0;
   ludo.timerSec = 0;
   startLudoTimer();
+  const resultShareBtn = document.getElementById('ludo-result-share-btn');
+  if (resultShareBtn) resultShareBtn.style.display = 'none';
 
   document.getElementById('ludo-setup').style.display = 'none';
   document.getElementById('ludo-game').style.display = '';
@@ -1820,6 +1823,8 @@ function restartLudo() {
   ludoGameStarted = false;
   ludo.paused = false;
   stopLudoTimer();
+  const resultShareBtn = document.getElementById('ludo-result-share-btn');
+  if (resultShareBtn) resultShareBtn.style.display = 'none';
   document.getElementById('ludo-setup').style.display = '';
   document.getElementById('ludo-game').style.display = 'none';
   document.getElementById('ludo-game').classList.remove('ludo-paused');
@@ -2026,6 +2031,8 @@ function showLudoWin(player) {
   // Show Share button only if Web Share API available
   const shareBtn = document.getElementById('ludo-share-btn');
   if (navigator.share) shareBtn.style.display = '';
+  const resultShareBtn = document.getElementById('ludo-result-share-btn');
+  if (resultShareBtn) resultShareBtn.style.display = '';
 
   // Reset screenshot area
   document.getElementById('ludo-snapshot-wrap').style.display = 'none';
@@ -2127,6 +2134,16 @@ async function ludoShareResult() {
     title: 'Ludo — Game Hub',
     text: getLudoResultText(),
   };
+
+  if (!navigator.share) {
+    try {
+      await navigator.clipboard.writeText(shareData.text);
+      showToast('Share text copied to clipboard!');
+    } catch(e) {
+      showToast('Share not available');
+    }
+    return;
+  }
 
   try {
     const blob = await ludoCreateSnapshotBlob();
