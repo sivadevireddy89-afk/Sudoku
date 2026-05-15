@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SUDOKU</title>
+<title>GAME HUB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -30,6 +30,11 @@
   --user-color: #7c6af7;
   --error-color: #f76a8c;
   --r: 12px;
+  /* Ludo player colors */
+  --p1: #f76a8c;
+  --p2: #6af7c8;
+  --p3: #f0c060;
+  --p4: #7c6af7;
 }
 
 body.light {
@@ -56,44 +61,6 @@ body.light {
   --error-color: #e0366a;
 }
 
-body.light::before {
-  background:
-    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(91,71,224,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 10% 90%, rgba(14,158,120,0.06) 0%, transparent 60%);
-}
-
-body.light header { background: rgba(244,244,248,0.85); }
-
-body.light .sudoku-grid {
-  background: rgba(91,71,224,0.12);
-  border-color: rgba(91,71,224,0.3);
-  box-shadow: 0 0 60px rgba(91,71,224,0.08), inset 0 0 40px rgba(0,0,0,0.03);
-}
-
-body.light .cell:nth-child(3n):not(:nth-child(9n)) { border-right-color: rgba(91,71,224,0.3); }
-body.light .cell:nth-child(n+19):nth-child(-n+27),
-body.light .cell:nth-child(n+46):nth-child(-n+54) { border-bottom-color: rgba(91,71,224,0.3); }
-
-body.light .htp-overlay,
-body.light .overlay { background: rgba(200,200,220,0.75); }
-
-.theme-toggle {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border-bright);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px;
-  transition: all 0.25s;
-  flex-shrink: 0;
-}
-.theme-toggle:hover {
-  background: var(--surface2);
-  border-color: var(--accent);
-  transform: rotate(20deg) scale(1.08);
-}
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -113,34 +80,29 @@ body::before {
     radial-gradient(ellipse 50% 40% at 10% 90%, rgba(106,247,200,0.08) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
-  animation: bgFloat 20s ease-in-out infinite;
-}
-
-@keyframes bgFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(10px, -10px) scale(1.02); }
-  50% { transform: translate(-5px, 5px) scale(1); }
-  75% { transform: translate(-10px, -5px) scale(1.01); }
 }
 
 .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
 
+/* HEADER */
 header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 32px;
+  padding: 14px 32px;
   border-bottom: 1px solid var(--border);
-  background: rgba(12,12,15,0.8);
+  background: rgba(12,12,15,0.85);
   backdrop-filter: blur(20px);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
+body.light header { background: rgba(244,244,248,0.85); }
+
 .logo {
   font-family: 'DM Serif Display', serif;
-  font-size: 26px;
+  font-size: 24px;
   letter-spacing: 6px;
   background: linear-gradient(135deg, #e8e0ff 0%, var(--accent) 50%, var(--accent3) 100%);
   -webkit-background-clip: text;
@@ -148,12 +110,21 @@ header {
   background-clip: text;
 }
 
-.header-stats {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.htp-btn {
+  background: transparent;
+  border: 1px solid var(--border-bright);
+  border-radius: 50px;
+  padding: 7px 16px;
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
 }
+.htp-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.08); }
 
 .stat-pill {
   display: flex;
@@ -170,42 +141,65 @@ header {
 .stat-pill .val { color: var(--accent); font-weight: 500; min-width: 36px; }
 .stat-pill .lbl { color: var(--text-dim); font-size: 11px; }
 
-/* ── PAUSE BUTTON ── */
-.pause-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.theme-toggle {
+  width: 38px; height: 38px;
+  border-radius: 50%;
   background: var(--surface);
   border: 1px solid var(--border-bright);
-  border-radius: 50px;
-  padding: 6px 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px;
+  transition: all 0.25s;
+}
+.theme-toggle:hover { background: var(--surface2); border-color: var(--accent); transform: rotate(20deg) scale(1.08); }
+
+/* TAB BAR */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(12,12,15,0.5);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 61px;
+  z-index: 90;
+}
+body.light .tab-bar { background: rgba(244,244,248,0.6); }
+
+.tab-btn {
+  padding: 14px 28px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
   color: var(--text-dim);
   font-family: 'Outfit', sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: 0.5px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: all 0.2s;
+  letter-spacing: 1px;
+  margin-bottom: -1px;
 }
-.pause-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(124,106,247,0.08);
-  transform: translateY(-1px);
-}
-.pause-btn.paused {
-  border-color: var(--accent3);
-  color: var(--accent3);
-  background: rgba(106,247,200,0.08);
-}
-.pause-btn .pause-icon { font-size: 13px; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-icon { font-size: 16px; }
 
-main {
-  flex: 1;
+/* TAB CONTENT */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* =========================================================
+   SUDOKU STYLES
+   ========================================================= */
+.sudoku-wrap {
   display: flex;
   gap: 28px;
   padding: 28px 32px;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   width: 100%;
   align-items: flex-start;
@@ -249,16 +243,9 @@ main {
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s;
-  text-align: left;
 }
 .diff-btn:hover { border-color: var(--border-bright); color: var(--text); background: var(--surface2); transform: translateX(4px); }
-.diff-btn.active {
-  border-color: var(--accent);
-  color: var(--text);
-  background: rgba(124,106,247,0.12);
-  box-shadow: 0 0 15px rgba(124,106,247,0.3);
-  transform: translateX(4px);
-}
+.diff-btn.active { border-color: var(--accent); color: var(--text); background: rgba(124,106,247,0.12); box-shadow: 0 0 15px rgba(124,106,247,0.3); transform: translateX(4px); }
 .diff-btn .diff-dot { width: 7px; height: 7px; border-radius: 50%; }
 .diff-btn[data-d="easy"] .diff-dot { background: var(--accent3); }
 .diff-btn[data-d="medium"] .diff-dot { background: var(--gold); }
@@ -285,128 +272,24 @@ main {
 .action-btn.danger { border-color: rgba(247,106,140,0.4); color: var(--accent2); }
 .action-btn.danger:hover { background: rgba(247,106,140,0.1); box-shadow: 0 4px 16px rgba(247,106,140,0.3); }
 
-.notes-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  color: var(--text-dim);
-}
-.toggle-switch {
-  width: 36px; height: 20px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.2s;
-}
+.notes-toggle { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text-dim); }
+.toggle-switch { width: 36px; height: 20px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; position: relative; transition: background 0.2s; }
 .toggle-switch.on { background: rgba(124,106,247,0.4); border-color: var(--accent); }
-.toggle-switch::after {
-  content: '';
-  position: absolute;
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--text-dim);
-  top: 2px; left: 2px;
-  transition: all 0.2s;
-}
+.toggle-switch::after { content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--text-dim); top: 2px; left: 2px; transition: all 0.2s; }
 .toggle-switch.on::after { left: 18px; background: var(--accent); }
 
-.board-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
+.board-area { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 
-.status-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  justify-content: center;
-  flex-direction: column;
-}
-.status-badge {
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 4px 12px;
-  border-radius: 50px;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-}
+.status-bar { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; flex-direction: column; }
+.status-badge { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 4px 12px; border-radius: 50px; border: 1px solid var(--border); color: var(--text-dim); }
 .status-badge.easy { border-color: rgba(106,247,200,0.4); color: var(--accent3); background: rgba(106,247,200,0.06); }
 .status-badge.medium { border-color: rgba(240,192,96,0.4); color: var(--gold); background: rgba(240,192,96,0.06); }
 .status-badge.hard { border-color: rgba(247,106,140,0.4); color: var(--accent2); background: rgba(247,106,140,0.06); }
 
 .progress-container { width: 100%; max-width: 400px; margin-top: 8px; }
-.progress-bar {
-  width: 100%; height: 6px;
-  background: var(--surface2);
-  border-radius: 3px; overflow: hidden;
-  border: 1px solid var(--border);
-}
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent3));
-  border-radius: 3px;
-  transition: width 0.4s ease;
-  width: 0%;
-}
-.progress-text {
-  font-size: 11px; color: var(--text-dim);
-  margin-top: 4px; text-align: center;
-  font-family: 'DM Mono', monospace;
-}
-
-.grid-wrap { position: relative; }
-
-/* ── PAUSE OVERLAY ── */
-.pause-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(12,12,15,0.92);
-  backdrop-filter: blur(12px);
-  border-radius: 14px;
-  z-index: 50;
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border: 1px solid rgba(124,106,247,0.25);
-}
-.pause-overlay.show { display: flex; }
-body.light .pause-overlay { background: rgba(244,244,248,0.92); }
-.pause-overlay-icon { font-size: 48px; line-height: 1; }
-.pause-overlay-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  color: var(--text);
-}
-.pause-overlay-sub { font-size: 13px; color: var(--text-dim); }
-.pause-overlay-btn {
-  margin-top: 8px;
-  background: rgba(124,106,247,0.15);
-  border: 1px solid var(--accent);
-  border-radius: 50px;
-  padding: 9px 28px;
-  color: var(--accent);
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.pause-overlay-btn:hover {
-  background: rgba(124,106,247,0.28);
-  transform: scale(1.04);
-  box-shadow: 0 0 20px rgba(124,106,247,0.4);
-}
+.progress-bar { width: 100%; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+.progress-text { font-size: 11px; color: var(--text-dim); margin-top: 4px; text-align: center; font-family: 'DM Mono', monospace; }
 
 .sudoku-grid {
   display: grid;
@@ -420,26 +303,13 @@ body.light .pause-overlay { background: rgba(244,244,248,0.92); }
   height: min(504px, 92vw);
   box-shadow: 0 0 60px rgba(124,106,247,0.1), inset 0 0 40px rgba(0,0,0,0.3);
 }
+body.light .sudoku-grid { background: rgba(91,71,224,0.12); border-color: rgba(91,71,224,0.3); box-shadow: 0 0 60px rgba(91,71,224,0.08), inset 0 0 40px rgba(0,0,0,0.03); }
 
-.cell {
-  background: var(--cell);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'DM Mono', monospace;
-  font-size: clamp(16px, 2.8vw, 22px);
-  font-weight: 400;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.15s, color 0.15s;
-  border-radius: 4px;
-  user-select: none;
-}
-
+.cell { background: var(--cell); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: clamp(16px, 2.8vw, 22px); font-weight: 400; cursor: pointer; position: relative; transition: background 0.15s, color 0.15s; border-radius: 4px; user-select: none; }
 .cell:nth-child(3n):not(:nth-child(9n)) { border-right: 2px solid rgba(124,106,247,0.35); }
-.cell:nth-child(n+19):nth-child(-n+27),
-.cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid rgba(124,106,247,0.35); }
-
+.cell:nth-child(n+19):nth-child(-n+27), .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid rgba(124,106,247,0.35); }
+body.light .cell:nth-child(3n):not(:nth-child(9n)) { border-right-color: rgba(91,71,224,0.3); }
+body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+46):nth-child(-n+54) { border-bottom-color: rgba(91,71,224,0.3); }
 .cell.fixed { color: var(--given); cursor: default; background: var(--cell-fixed); }
 .cell.user-filled { color: var(--user-color); }
 .cell.error { color: var(--error-color); background: var(--cell-error); animation: shake 0.3s ease; }
@@ -447,199 +317,300 @@ body.light .pause-overlay { background: rgba(244,244,248,0.92); }
 .cell.same-num { background: var(--cell-same); }
 .cell.same-row-col { background: rgba(124,106,247,0.05); }
 .cell:hover:not(.fixed):not(.selected) { background: var(--cell-hover); transform: scale(1.05); z-index: 10; }
+.cell .notes-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: 100%; height: 100%; padding: 2px; }
+.cell .note { display: flex; align-items: center; justify-content: center; font-size: clamp(6px, 1vw, 9px); color: rgba(124,106,247,0.6); font-family: 'DM Mono', monospace; }
 
-.cell .notes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  width: 100%; height: 100%;
-  padding: 2px;
-}
-.cell .note {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(6px, 1vw, 9px);
-  color: rgba(124,106,247,0.6);
-  font-family: 'DM Mono', monospace;
-}
-
-@keyframes shake {
-  0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}
-}
-@keyframes popIn {
-  0%{transform:scale(0.3);opacity:0} 50%{transform:scale(1.25)} 70%{transform:scale(0.9)} 100%{transform:scale(1);opacity:1}
-}
-@keyframes pulse {
-  0%, 100% { box-shadow: inset 0 0 0 2px var(--accent), 0 0 20px rgba(124,106,247,0.4); }
-  50% { box-shadow: inset 0 0 0 2px var(--accent), 0 0 30px rgba(124,106,247,0.6); }
-}
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+@keyframes popIn { 0%{transform:scale(0.3);opacity:0} 50%{transform:scale(1.25)} 70%{transform:scale(0.9)} 100%{transform:scale(1);opacity:1} }
+@keyframes pulse { 0%,100%{box-shadow:inset 0 0 0 2px var(--accent),0 0 20px rgba(124,106,247,0.4)} 50%{box-shadow:inset 0 0 0 2px var(--accent),0 0 30px rgba(124,106,247,0.6)} }
 .cell .num-val { animation: popIn 0.2s ease; display: block; }
 
-.numpad { display: flex; gap: 8px; align-items: center; }
-.num-btn {
-  width: 46px; height: 46px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.18s;
-  position: relative;
-}
+.numpad { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.num-btn { width: 46px; height: 46px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.18s; position: relative; }
 .num-btn:hover { background: var(--surface2); border-color: var(--accent); color: var(--accent); transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 20px rgba(124,106,247,0.25); }
-.num-btn:active { transform: translateY(0) scale(0.95); box-shadow: 0 2px 8px rgba(124,106,247,0.3); }
+.num-btn:active { transform: translateY(0) scale(0.95); }
 .num-btn.erase { font-size: 16px; color: var(--text-dim); }
-.num-btn .remaining {
-  position: absolute;
-  top: 3px; right: 4px;
-  font-size: 8px;
-  color: var(--text-muted);
-  font-family: 'Outfit', sans-serif;
+.num-btn .remaining { position: absolute; top: 3px; right: 4px; font-size: 8px; color: var(--text-muted); font-family: 'Outfit', sans-serif; }
+
+/* =========================================================
+   LUDO STYLES
+   ========================================================= */
+.ludo-wrap {
+  display: flex;
+  gap: 24px;
+  padding: 24px 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-/* ── RIGHT PANEL — RESULTS ── */
-.right-panel {
-  width: 240px;
-  flex-shrink: 0;
+.ludo-panel {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  width: 210px;
+  flex-shrink: 0;
 }
 
-.results-card {
+.ludo-board-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-width: 300px;
+}
+
+/* Setup screen */
+.ludo-setup {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  overflow: hidden;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
 }
+.ludo-setup h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.ludo-setup p { color: var(--text-dim); font-size: 13px; margin-bottom: 28px; }
 
-.results-header {
+.player-count-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+.pc-btn {
+  width: 64px; height: 64px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-dim);
+  font-family: 'DM Mono', monospace;
+  font-size: 24px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 2px;
+}
+.pc-btn span { font-size: 10px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; }
+.pc-btn:hover { border-color: var(--accent); color: var(--text); background: rgba(124,106,247,0.12); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(124,106,247,0.2); }
+.pc-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.15); box-shadow: 0 0 20px rgba(124,106,247,0.3); }
+
+.player-names { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.player-name-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.results-title {
-  font-size: 9px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.results-clear {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 10px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  font-family: 'Outfit', sans-serif;
-  transition: color 0.2s;
-  padding: 0;
-}
-.results-clear:hover { color: var(--accent2); }
-
-.results-list {
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-.results-list::-webkit-scrollbar { width: 3px; }
-.results-list::-webkit-scrollbar-thumb { background: rgba(124,106,247,0.3); border-radius: 2px; }
-
-.result-empty {
-  text-align: center;
-  padding: 24px 12px;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.7;
-}
-.result-empty-icon { font-size: 28px; display: block; margin-bottom: 8px; }
-
-.result-item {
+  gap: 12px;
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 10px 16px;
+}
+.player-color-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.player-name-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  outline: none;
+}
+.player-name-input::placeholder { color: var(--text-muted); }
+
+.start-ludo-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), #9d8fff);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+.start-ludo-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,106,247,0.45); }
+
+/* Ludo board SVG container */
+#ludo-board-container {
+  width: min(520px, 95vw);
+  height: min(520px, 95vw);
+  position: relative;
+}
+
+#ludo-svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  box-shadow: 0 0 60px rgba(124,106,247,0.15), 0 0 0 2px rgba(124,106,247,0.2);
+}
+
+/* Ludo info panel */
+.ludo-info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+}
+
+.turn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.turn-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+}
+.turn-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.turn-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
+
+/* Dice */
+.dice-area {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  transition: border-color 0.2s;
+  align-items: center;
+  gap: 14px;
 }
-.result-item:hover { border-color: var(--border-bright); }
-.result-item.gold { border-color: rgba(240,192,96,0.35); }
-.result-item.silver { border-color: rgba(180,180,200,0.35); }
-.result-item.bronze { border-color: rgba(180,120,60,0.35); }
 
-.result-top {
+.dice-btn {
+  width: 80px; height: 80px;
+  background: var(--surface2);
+  border: 2px solid var(--border-bright);
+  border-radius: 18px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  font-size: 42px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.dice-btn:hover { border-color: var(--accent); box-shadow: 0 0 20px rgba(124,106,247,0.3); transform: scale(1.05); }
+.dice-btn:active { transform: scale(0.95); }
+.dice-btn.rolling { animation: diceRoll 0.5s ease; }
+.dice-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+@keyframes diceRoll {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-15deg) scale(1.1); }
+  50% { transform: rotate(15deg) scale(0.95); }
+  75% { transform: rotate(-8deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
 }
 
-.result-rank {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.result-diff-badge {
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 50px;
-}
-.result-diff-badge.easy { background: rgba(106,247,200,0.1); color: var(--accent3); border: 1px solid rgba(106,247,200,0.2); }
-.result-diff-badge.medium { background: rgba(240,192,96,0.1); color: var(--gold); border: 1px solid rgba(240,192,96,0.2); }
-.result-diff-badge.hard { background: rgba(247,106,140,0.1); color: var(--accent2); border: 1px solid rgba(247,106,140,0.2); }
-
-.result-time {
+.dice-result {
   font-family: 'DM Mono', monospace;
-  font-size: 20px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
-.result-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.result-moves {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-dim);
+  text-align: center;
+  min-height: 18px;
 }
 
-.result-date {
-  font-size: 10px;
-  color: var(--text-muted);
+.roll-btn {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--accent), #9d8fff);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+}
+.roll-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,106,247,0.4); }
+.roll-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Player status list */
+.player-status-list { display: flex; flex-direction: column; gap: 8px; }
+.player-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.player-status-row.current-turn {
+  border-color: rgba(124,106,247,0.4);
+  background: rgba(124,106,247,0.08);
+}
+.ps-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ps-name { flex: 1; font-size: 13px; font-weight: 500; }
+.ps-tokens {
+  display: flex; gap: 3px;
+}
+.ps-token {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  opacity: 0.4;
+}
+.ps-token.home { opacity: 1; box-shadow: 0 0 6px currentColor; }
+.ps-home-count {
   font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
-.result-stars { font-size: 11px; letter-spacing: 1px; }
+/* Game log */
+.game-log {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.game-log::-webkit-scrollbar { width: 3px; }
+.game-log::-webkit-scrollbar-thumb { background: rgba(124,106,247,0.3); border-radius: 2px; }
+.log-entry { font-size: 11px; color: var(--text-dim); padding: 3px 0; border-bottom: 1px solid var(--border); line-height: 1.5; }
+.log-entry:last-child { border-bottom: none; }
+.log-entry .log-name { font-weight: 600; }
 
-/* ── WIN OVERLAY ── */
+/* Ludo action buttons */
+.ludo-action-btns { display: flex; flex-direction: column; gap: 6px; }
+
+/* Win overlay */
 .overlay {
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   background: rgba(0,0,0,0.88);
   backdrop-filter: blur(16px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0; pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.5s;
 }
 .overlay.show { opacity: 1; pointer-events: all; }
@@ -647,12 +618,14 @@ body.light .pause-overlay { background: rgba(244,244,248,0.92); }
 #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 201; }
 
 .win-card {
-  position: relative; z-index: 202;
+  position: relative;
+  z-index: 202;
   background: var(--surface);
   border-radius: 24px;
   padding: 0;
   text-align: center;
-  max-width: 420px; width: 92%;
+  max-width: 420px;
+  width: 92%;
   overflow: hidden;
   box-shadow: 0 0 0 1px rgba(124,106,247,0.3), 0 30px 80px rgba(0,0,0,0.5), 0 0 120px rgba(124,106,247,0.2);
   transform: scale(0.85) translateY(40px);
@@ -661,229 +634,130 @@ body.light .pause-overlay { background: rgba(244,244,248,0.92); }
 }
 .overlay.show .win-card { transform: scale(1) translateY(0); opacity: 1; transition-delay: 0.15s; }
 
-.win-rainbow-bar {
-  height: 4px;
-  background: linear-gradient(90deg, #7c6af7, #f76a8c, #f0c060, #6af7c8, #7c6af7);
-  background-size: 200% 100%;
-  animation: rainbowSlide 2.5s linear infinite;
-}
-@keyframes rainbowSlide { 0%{background-position:0% 0%} 100%{background-position:200% 0%} }
+.win-rainbow-bar { height: 4px; background: linear-gradient(90deg, #7c6af7, #f76a8c, #f0c060, #6af7c8, #7c6af7); background-size: 200% 100%; animation: rainbowSlide 2.5s linear infinite; }
+@keyframes rainbowSlide { 0%{background-position:0%} 100%{background-position:200%} }
 
 .win-body { padding: 36px 40px 40px; }
-
 .win-burst { position: relative; display: inline-block; margin-bottom: 4px; }
-.win-burst-emoji {
-  font-size: 64px; display: block;
-  animation: burstIn 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
-  filter: drop-shadow(0 0 20px rgba(124,106,247,0.6));
-}
-@keyframes burstIn {
-  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
-  60%  { transform: scale(1.25) rotate(8deg); }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
-}
-.win-ring {
-  position: absolute; inset: -8px;
-  border-radius: 50%; border: 2px solid var(--accent);
-  animation: ringPulse 1.4s ease-out 0.8s both; opacity: 0;
-}
+.win-burst-emoji { font-size: 64px; display: block; animation: burstIn 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.3s both; filter: drop-shadow(0 0 20px rgba(124,106,247,0.6)); }
+@keyframes burstIn { 0%{transform:scale(0) rotate(-20deg);opacity:0} 60%{transform:scale(1.25) rotate(8deg)} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+.win-ring { position: absolute; inset: -8px; border-radius: 50%; border: 2px solid var(--accent); animation: ringPulse 1.4s ease-out 0.8s both; opacity: 0; }
 .win-ring:nth-child(2) { inset: -18px; animation-delay: 1s; border-color: var(--accent2); }
 .win-ring:nth-child(3) { inset: -28px; animation-delay: 1.2s; border-color: var(--accent3); }
-@keyframes ringPulse {
-  0%   { transform: scale(0.6); opacity: 0.9; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
-.win-headline {
-  font-family: 'DM Serif Display', serif; font-size: 38px; line-height: 1.1;
-  margin: 16px 0 4px; opacity: 0; transform: translateY(16px);
-  animation: slideUpFade 0.5s ease 0.55s forwards;
-}
+@keyframes ringPulse { 0%{transform:scale(0.6);opacity:0.9} 100%{transform:scale(1.5);opacity:0} }
+.win-headline { font-family: 'DM Serif Display', serif; font-size: 38px; line-height: 1.1; margin: 16px 0 4px; opacity: 0; transform: translateY(16px); animation: slideUpFade 0.5s ease 0.55s forwards; }
 .win-headline em { font-style: italic; color: var(--accent); }
-
-.win-badge {
-  display: inline-block; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-  padding: 4px 14px; border-radius: 50px;
-  background: linear-gradient(135deg, rgba(124,106,247,0.2), rgba(106,247,200,0.15));
-  border: 1px solid rgba(124,106,247,0.35); color: var(--accent3);
-  margin-bottom: 18px; opacity: 0;
-  animation: slideUpFade 0.5s ease 0.7s forwards;
-}
-
-.win-message {
-  font-size: 14px; color: var(--text-dim); line-height: 1.7;
-  max-width: 300px; margin: 0 auto 26px; opacity: 0;
-  animation: slideUpFade 0.5s ease 0.85s forwards;
-}
-
-.win-stats {
-  display: flex; gap: 0; justify-content: center; margin-bottom: 28px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 14px; overflow: hidden; opacity: 0;
-  animation: slideUpFade 0.5s ease 1s forwards;
-}
-.win-stat { flex: 1; padding: 14px 10px; text-align: center; position: relative; }
-.win-stat + .win-stat::before {
-  content: ''; position: absolute; left: 0; top: 20%; height: 60%;
-  width: 1px; background: var(--border);
-}
-.win-stat-val { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); display: block; font-weight: 500; }
-.win-stat-lbl { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
-
-.win-stars { display: flex; justify-content: center; gap: 6px; margin-bottom: 24px; opacity: 0; animation: slideUpFade 0.5s ease 1.1s forwards; }
-.win-star { font-size: 22px; filter: grayscale(1); transition: filter 0.3s, transform 0.3s; }
-.win-star.lit { filter: grayscale(0) drop-shadow(0 0 6px #f0c060); animation: starPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-@keyframes starPop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
-
-.win-btns { display: flex; gap: 10px; opacity: 0; animation: slideUpFade 0.5s ease 1.2s forwards; }
-.win-btn {
-  flex: 1;
-  background: linear-gradient(135deg, var(--accent), #9d8fff);
-  border: none; border-radius: 12px;
-  padding: 13px 20px; color: #fff;
-  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
-  cursor: pointer; letter-spacing: 0.5px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
+.win-badge { display: inline-block; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 4px 14px; border-radius: 50px; background: linear-gradient(135deg, rgba(124,106,247,0.2), rgba(106,247,200,0.15)); border: 1px solid rgba(124,106,247,0.35); color: var(--accent3); margin-bottom: 18px; opacity: 0; animation: slideUpFade 0.5s ease 0.7s forwards; }
+.win-message { font-size: 14px; color: var(--text-dim); line-height: 1.7; max-width: 300px; margin: 0 auto 26px; opacity: 0; animation: slideUpFade 0.5s ease 0.85s forwards; }
+.win-btns { display: flex; gap: 10px; opacity: 0; animation: slideUpFade 0.5s ease 1s forwards; }
+.win-btn { flex: 1; background: linear-gradient(135deg, var(--accent), #9d8fff); border: none; border-radius: 12px; padding: 13px 20px; color: #fff; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: 0.5px; transition: transform 0.2s, box-shadow 0.2s; }
 .win-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,106,247,0.45); }
-.win-btn.secondary {
-  background: var(--surface2); color: var(--text-dim);
-  border: 1px solid var(--border-bright); box-shadow: none;
-}
-.win-btn.secondary:hover { color: var(--text); border-color: var(--accent); box-shadow: none; transform: translateY(-2px); }
+.win-btn.secondary { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border-bright); box-shadow: none; }
+.win-btn.secondary:hover { color: var(--text); border-color: var(--accent); }
+@keyframes slideUpFade { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
 
-@keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-body.light .win-card { box-shadow: 0 0 0 1px rgba(91,71,224,0.2), 0 30px 80px rgba(0,0,0,0.15), 0 0 80px rgba(91,71,224,0.1); }
-
-.toast {
-  position: fixed; bottom: 30px; left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--surface2); border: 1px solid var(--border-bright);
-  border-radius: 50px; padding: 10px 22px; font-size: 13px;
-  color: var(--text); opacity: 0; transition: all 0.3s;
-  z-index: 300; pointer-events: none; white-space: nowrap;
-}
+/* Toast */
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface2); border: 1px solid var(--border-bright); border-radius: 50px; padding: 10px 22px; font-size: 13px; color: var(--text); opacity: 0; transition: all 0.3s; z-index: 300; pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-.htp-btn {
-  background: transparent; border: 1px solid var(--border-bright);
-  border-radius: 50px; padding: 7px 16px; color: var(--text-dim);
-  font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500;
-  letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s;
-}
-.htp-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.08); transform: translateY(-1px); }
-
-.htp-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-  backdrop-filter: blur(14px); z-index: 300;
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.35s;
-}
+/* HTP modal */
+.htp-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(14px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.35s; }
 .htp-overlay.show { opacity: 1; pointer-events: all; }
-.htp-modal {
-  background: var(--surface); border: 1px solid rgba(124,106,247,0.25);
-  border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh;
-  overflow-y: auto; box-shadow: 0 0 80px rgba(124,106,247,0.15);
-  transform: translateY(24px) scale(0.97); transition: transform 0.35s;
-}
+body.light .htp-overlay, body.light .overlay { background: rgba(200,200,220,0.75); }
+.htp-modal { background: var(--surface); border: 1px solid rgba(124,106,247,0.25); border-radius: 20px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 80px rgba(124,106,247,0.15); transform: translateY(24px) scale(0.97); transition: transform 0.35s; }
 .htp-overlay.show .htp-modal { transform: translateY(0) scale(1); }
 .htp-modal::-webkit-scrollbar { width: 4px; }
 .htp-modal::-webkit-scrollbar-thumb { background: rgba(124,106,247,0.3); border-radius: 2px; }
-
-.htp-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 24px 28px 20px; border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; background: var(--surface); z-index: 1;
-  border-radius: 20px 20px 0 0;
-}
+.htp-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 28px 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; border-radius: 20px 20px 0 0; }
 .htp-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--text); }
 .htp-title span { font-style: italic; color: var(--accent); }
-.htp-close {
-  width: 32px; height: 32px; background: var(--surface2);
-  border: 1px solid var(--border); border-radius: 50%;
-  color: var(--text-dim); font-size: 16px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-}
+.htp-close { width: 32px; height: 32px; background: var(--surface2); border: 1px solid var(--border); border-radius: 50%; color: var(--text-dim); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .htp-close:hover { background: rgba(247,106,140,0.15); border-color: var(--accent2); color: var(--accent2); }
-
-.htp-body { padding: 24px 28px 32px; display: flex; flex-direction: column; gap: 24px; }
-.htp-intro { font-size: 14px; color: var(--text-dim); line-height: 1.7; border-left: 2px solid var(--accent); padding-left: 14px; }
-.htp-section-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
-.htp-rules { display: flex; flex-direction: column; gap: 10px; }
-.htp-rule { display: flex; gap: 14px; align-items: flex-start; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; }
+.htp-body { padding: 24px 28px 32px; display: flex; flex-direction: column; gap: 20px; }
+.htp-section-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.htp-rule { display: flex; gap: 14px; align-items: flex-start; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 13px 16px; margin-bottom: 8px; }
 .htp-rule-icon { width: 32px; height: 32px; flex-shrink: 0; background: rgba(124,106,247,0.12); border: 1px solid rgba(124,106,247,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.htp-rule-text { flex: 1; }
 .htp-rule-text strong { display: block; font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 3px; }
 .htp-rule-text span { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
-.htp-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.htp-ctrl { display: flex; gap: 10px; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
-.htp-ctrl-key { background: rgba(255,255,255,0.06); border: 1px solid var(--border-bright); border-radius: 5px; padding: 2px 7px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
-.htp-ctrl-desc { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
-.diff-info { display: flex; flex-direction: column; gap: 8px; }
-.diff-row { display: flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
-.diff-row-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.diff-row-name { font-size: 13px; font-weight: 600; color: var(--text); width: 60px; }
-.diff-row-desc { font-size: 11px; color: var(--text-dim); flex: 1; }
-.diff-row-clues { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); }
-.htp-tip { background: rgba(106,247,200,0.05); border: 1px solid rgba(106,247,200,0.15); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: var(--accent3); line-height: 1.7; }
-.htp-tip strong { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; }
 
-@media (max-width: 720px) {
-  .htp-controls { grid-template-columns: 1fr; }
-  .htp-btn span { display: none; }
-  .right-panel { width: 100%; }
-}
+/* Leaderboard */
+.leaderboard-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.lb-tab { flex: 1; min-width: 70px; padding: 8px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.lb-tab:hover { border-color: var(--border-bright); color: var(--text); }
+.lb-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.12); }
+.leaderboard-table { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.lb-header { display: grid; grid-template-columns: 40px 60px 80px 60px 100px; gap: 8px; padding: 12px 16px; background: rgba(124,106,247,0.08); border-bottom: 1px solid var(--border); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.lb-rows { max-height: 300px; overflow-y: auto; }
+.lb-rows::-webkit-scrollbar { width: 4px; }
+.lb-rows::-webkit-scrollbar-thumb { background: rgba(124,106,247,0.3); border-radius: 2px; }
+.lb-row { display: grid; grid-template-columns: 40px 60px 80px 60px 100px; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); transition: background 0.15s; }
+.lb-row:hover { background: rgba(124,106,247,0.05); }
+.lb-row:last-child { border-bottom: none; }
+.lb-rank { font-family: 'DM Mono', monospace; font-weight: 600; color: var(--accent); }
+.lb-rank.gold { color: #ffd700; }
+.lb-rank.silver { color: #c0c0c0; }
+.lb-rank.bronze { color: #cd7f32; }
+.lb-diff { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+.lb-diff.easy { color: var(--accent3); }
+.lb-diff.medium { color: var(--gold); }
+.lb-diff.hard { color: var(--accent2); }
+.lb-time, .lb-moves { font-family: 'DM Mono', monospace; color: var(--text-dim); }
+.lb-date { font-size: 11px; color: var(--text-muted); }
+.lb-empty { padding: 40px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
+.lb-actions { margin-top: 20px; display: flex; justify-content: center; }
 
-@media (max-width: 1060px) {
-  main { flex-direction: column; padding: 16px; align-items: center; }
+/* Responsive */
+@media (max-width: 900px) {
+  .sudoku-wrap { flex-direction: column; padding: 16px; align-items: center; }
   .left-panel { width: 100%; flex-direction: row; flex-wrap: wrap; gap: 10px; }
-  .right-panel { width: 100%; }
   .panel-card { flex: 1; min-width: 140px; }
   .diff-btns, .action-btns { flex-direction: row; flex-wrap: wrap; }
-  .results-list { max-height: 300px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
   header { padding: 14px 16px; }
   .logo { font-size: 20px; letter-spacing: 4px; }
-  .header-stats { gap: 8px; }
-  .stat-pill { padding: 5px 10px; }
-  .numpad { flex-wrap: wrap; justify-content: center; }
+  .tab-bar { padding: 0 16px; }
+  .tab-btn { padding: 12px 16px; font-size: 12px; }
+  .ludo-wrap { flex-direction: column; padding: 16px; align-items: center; }
+  .ludo-panel { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .ludo-info-card { flex: 1; min-width: 200px; }
 }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- HEADER -->
-  <header>
-    <div class="logo">SUDOKU</div>
-    <div class="header-stats">
-      <div class="stat-pill">
-        <span class="icon">⏱</span>
-        <span class="val" id="timer">00:00</span>
-        <span class="lbl">time</span>
-      </div>
-      <div class="stat-pill">
-        <span class="icon">👣</span>
-        <span class="val" id="moves-display">0</span>
-        <span class="lbl">moves</span>
-      </div>
-      <!-- PAUSE BUTTON -->
-      <button class="pause-btn" id="pause-btn" onclick="togglePause()">
-        <span class="pause-icon" id="pause-icon">⏸</span>
-        <span id="pause-label">Pause</span>
-      </button>
-      <button class="htp-btn" onclick="openHTP()">? How to Play</button>
-      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+<!-- HEADER -->
+<header>
+  <div class="logo">GAME HUB</div>
+  <div class="header-right">
+    <div class="stat-pill" id="sudoku-header-stat">
+      <span class="icon">⏱</span>
+      <span class="val" id="timer">00:00</span>
+      <span class="lbl">time</span>
     </div>
-  </header>
+    <div class="stat-pill" id="sudoku-moves-stat">
+      <span class="icon">👣</span>
+      <span class="val" id="moves-display">0</span>
+      <span class="lbl">moves</span>
+    </div>
+    <button class="htp-btn" id="how-to-play-btn" onclick="openHTP()">? How to Play</button>
+    <button class="htp-btn" id="leaderboard-btn" onclick="openLeaderboard()">🏆 Leaderboard</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+  </div>
+</header>
 
-  <!-- MAIN -->
-  <main>
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-sudoku" onclick="switchTab('sudoku')">
+    <span class="tab-icon">🔢</span> SUDOKU
+  </button>
+  <button class="tab-btn" id="tab-ludo" onclick="switchTab('ludo')">
+    <span class="tab-icon">🎲</span> LUDO
+  </button>
+</div>
 
-    <!-- LEFT PANEL -->
+<!-- SUDOKU TAB -->
+<div class="tab-content active" id="content-sudoku">
+  <div class="sudoku-wrap">
     <div class="left-panel">
       <div class="panel-card">
         <div class="panel-title">Difficulty</div>
@@ -911,7 +785,6 @@ body.light .win-card { box-shadow: 0 0 0 1px rgba(91,71,224,0.2), 0 30px 80px rg
       </div>
     </div>
 
-    <!-- BOARD -->
     <div class="board-area">
       <div class="status-bar">
         <div class="status-badge easy" id="diff-badge">EASY</div>
@@ -920,20 +793,11 @@ body.light .win-card { box-shadow: 0 0 0 1px rgba(91,71,224,0.2), 0 30px 80px rg
           <div class="progress-text" id="progress-text">0/81 cells</div>
         </div>
       </div>
-
       <div class="grid-wrap">
         <div class="sudoku-grid" id="grid"></div>
-        <!-- PAUSE OVERLAY ON BOARD -->
-        <div class="pause-overlay" id="pause-overlay">
-          <div class="pause-overlay-icon">⏸</div>
-          <div class="pause-overlay-title">Game Paused</div>
-          <div class="pause-overlay-sub">Timer stopped · board hidden</div>
-          <button class="pause-overlay-btn" onclick="togglePause()">▶ Resume</button>
-        </div>
       </div>
-
       <div class="numpad">
-        <button class="num-btn erase" onclick="clearSelected()" title="Erase">⌫<span class="remaining"></span></button>
+        <button class="num-btn erase" onclick="clearSelected()" title="Erase">⌫</button>
         <button class="num-btn" onclick="enterNum(1)">1<span class="remaining" id="r1"></span></button>
         <button class="num-btn" onclick="enterNum(2)">2<span class="remaining" id="r2"></span></button>
         <button class="num-btn" onclick="enterNum(3)">3<span class="remaining" id="r3"></span></button>
@@ -945,69 +809,162 @@ body.light .win-card { box-shadow: 0 0 0 1px rgba(91,71,224,0.2), 0 30px 80px rg
         <button class="num-btn" onclick="enterNum(9)">9<span class="remaining" id="r9"></span></button>
       </div>
     </div>
-
-    <!-- RIGHT PANEL — RESULTS -->
-    <div class="right-panel">
-      <div class="results-card">
-        <div class="results-header">
-          <span class="results-title">Results History</span>
-          <button class="results-clear" onclick="clearResults()">Clear all ×</button>
-        </div>
-        <div class="results-list" id="results-list">
-          <div class="result-empty">
-            <span class="result-empty-icon">🏆</span>
-            Solve a puzzle to see your results here.<br>They persist until you clear your browser cache.
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
+  </div>
 </div>
 
-<!-- HOW TO PLAY MODAL -->
-<div class="htp-overlay" id="htp-overlay" onclick="if(event.target===this)closeHTP()">
-  <div class="htp-modal">
-    <div class="htp-header">
-      <div class="htp-title">How to <span>Play</span></div>
-      <button class="htp-close" onclick="closeHTP()">✕</button>
+<!-- LUDO TAB -->
+<div class="tab-content" id="content-ludo">
+  <div class="ludo-wrap" id="ludo-wrap">
+
+    <!-- Setup screen (shown first) -->
+    <div class="ludo-setup" id="ludo-setup" style="margin: 0 auto;">
+      <h2>🎲 Ludo</h2>
+      <p>Classic board game for 2 to 4 players. Race your tokens home first!</p>
+
+      <div class="panel-title" style="text-align:left;margin-bottom:12px;">Number of Players</div>
+      <div class="player-count-btns">
+        <button class="pc-btn" data-n="2" onclick="selectPlayerCount(2,this)">2<span>players</span></button>
+        <button class="pc-btn active" data-n="3" onclick="selectPlayerCount(3,this)">3<span>players</span></button>
+        <button class="pc-btn" data-n="4" onclick="selectPlayerCount(4,this)">4<span>players</span></button>
+      </div>
+
+      <div class="panel-title" style="text-align:left;margin-bottom:12px;">Player Names</div>
+      <div class="player-names" id="player-names-setup">
+        <!-- Filled by JS -->
+      </div>
+
+      <button class="start-ludo-btn" onclick="startLudo()">🎲 Start Game</button>
     </div>
-    <div class="htp-body">
-      <p class="htp-intro">Sudoku is a logic-based number puzzle. Fill every row, column and 3×3 box with the digits 1–9 — each digit appearing exactly once. No maths required, just pure logic.</p>
-      <div>
-        <div class="htp-section-title">The Rules</div>
-        <div class="htp-rules">
-          <div class="htp-rule"><div class="htp-rule-icon">↔️</div><div class="htp-rule-text"><strong>Every Row</strong><span>Each of the 9 horizontal rows must contain the digits 1–9 with no repetition.</span></div></div>
-          <div class="htp-rule"><div class="htp-rule-icon">↕️</div><div class="htp-rule-text"><strong>Every Column</strong><span>Each of the 9 vertical columns must contain the digits 1–9 with no repetition.</span></div></div>
-          <div class="htp-rule"><div class="htp-rule-icon">⊞</div><div class="htp-rule-text"><strong>Every 3×3 Box</strong><span>Each of the nine 3×3 sub-grids must contain the digits 1–9 with no repetition.</span></div></div>
-          <div class="htp-rule"><div class="htp-rule-icon">🔒</div><div class="htp-rule-text"><strong>Given Digits</strong><span>Bright white digits are pre-filled clues — they cannot be changed. Use them as anchors to solve the rest.</span></div></div>
+
+    <!-- Game area (hidden until started) -->
+    <div id="ludo-game" style="display:none; width:100%; display:none;">
+      <div class="ludo-wrap" style="padding:0;">
+        <!-- Left panel -->
+        <div class="ludo-panel">
+          <div class="ludo-info-card">
+            <div class="panel-title">Current Turn</div>
+            <div class="turn-indicator" id="turn-indicator">
+              <div class="turn-dot" id="turn-dot" style="background:var(--p1);color:var(--p1)"></div>
+              <div>
+                <div class="turn-name" id="turn-name">Player 1</div>
+                <div class="turn-sub">YOUR MOVE</div>
+              </div>
+            </div>
+            <div class="dice-area">
+              <div class="dice-btn" id="dice-display" onclick="rollDice()">⚀</div>
+              <div class="dice-result" id="dice-result">Click dice to roll</div>
+            </div>
+          </div>
+
+          <div class="ludo-info-card">
+            <div class="panel-title">Players</div>
+            <div class="player-status-list" id="player-status-list"></div>
+          </div>
+
+          <div class="ludo-info-card">
+            <div class="panel-title">Game Log</div>
+            <div class="game-log" id="game-log">
+              <div class="log-entry">Game started! Good luck everyone.</div>
+            </div>
+          </div>
+
+          <div class="ludo-action-btns">
+            <button class="action-btn primary" onclick="restartLudo()"><span>↺</span> New Game</button>
+          </div>
+        </div>
+
+        <!-- Board -->
+        <div class="ludo-board-area">
+          <div id="ludo-board-container">
+            <svg id="ludo-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+              <!-- Drawn by JS -->
+            </svg>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;">Click a highlighted token to move it</div>
         </div>
       </div>
-      <div>
-        <div class="htp-section-title">Keyboard Shortcuts</div>
-        <div class="htp-controls">
-          <div class="htp-ctrl"><span class="htp-ctrl-key">1 – 9</span><span class="htp-ctrl-desc">Enter a digit in the selected cell</span></div>
-          <div class="htp-ctrl"><span class="htp-ctrl-key">⌫ / Del</span><span class="htp-ctrl-desc">Erase the selected cell</span></div>
-          <div class="htp-ctrl"><span class="htp-ctrl-key">↑ ↓ ← →</span><span class="htp-ctrl-desc">Navigate between cells</span></div>
-          <div class="htp-ctrl"><span class="htp-ctrl-key">Ctrl Z</span><span class="htp-ctrl-desc">Undo your last move</span></div>
-          <div class="htp-ctrl"><span class="htp-ctrl-key">Space / P</span><span class="htp-ctrl-desc">Pause / resume the timer</span></div>
-        </div>
-      </div>
-      <div>
-        <div class="htp-section-title">Difficulty Levels</div>
-        <div class="diff-info">
-          <div class="diff-row"><div class="diff-row-dot" style="background:#6af7c8"></div><div class="diff-row-name" style="color:#6af7c8">Easy</div><div class="diff-row-desc">More given digits — great for beginners.</div><div class="diff-row-clues">~40 clues</div></div>
-          <div class="diff-row"><div class="diff-row-dot" style="background:#f0c060"></div><div class="diff-row-name" style="color:#f0c060">Medium</div><div class="diff-row-desc">Fewer clues — requires logical deduction.</div><div class="diff-row-clues">~30 clues</div></div>
-          <div class="diff-row"><div class="diff-row-dot" style="background:#f76a8c"></div><div class="diff-row-name" style="color:#f76a8c">Hard</div><div class="diff-row-desc">Minimal clues — demands patience.</div><div class="diff-row-clues">~22 clues</div></div>
-        </div>
-      </div>
-      <div class="htp-tip"><strong>💡 Pro Tip</strong>Start with rows, columns, or boxes that already have the most digits filled in. Use Notes mode to track candidates before committing.</div>
     </div>
   </div>
 </div>
 
-<!-- CONFETTI -->
-<canvas id="confetti-canvas"></canvas>
+</div><!-- .app -->
+
+<!-- SUDOKU HOW TO PLAY MODAL -->
+<div class="htp-overlay" id="htp-overlay" onclick="if(event.target===this)closeHTP()">
+  <div class="htp-modal">
+    <div class="htp-header">
+      <div class="htp-title">How to <span>Play Sudoku</span></div>
+      <button class="htp-close" onclick="closeHTP()">✕</button>
+    </div>
+    <div class="htp-body">
+      <div>
+        <div class="htp-section-title">The Rules</div>
+        <div class="htp-rule"><div class="htp-rule-icon">↔️</div><div class="htp-rule-text"><strong>Every Row</strong><span>Each row must contain 1–9 with no repetition.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">↕️</div><div class="htp-rule-text"><strong>Every Column</strong><span>Each column must contain 1–9 with no repetition.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">⊞</div><div class="htp-rule-text"><strong>Every 3×3 Box</strong><span>Each 3×3 box must contain 1–9 with no repetition.</span></div></div>
+      </div>
+      <div>
+        <div class="htp-section-title">Controls</div>
+        <div class="htp-rule"><div class="htp-rule-icon">👆</div><div class="htp-rule-text"><strong>Click a Cell</strong><span>Select it, then press a number or click the numpad.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">✏️</div><div class="htp-rule-text"><strong>Notes Mode</strong><span>Toggle pencil to jot candidates without committing.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">⌨️</div><div class="htp-rule-text"><strong>Keyboard</strong><span>1–9 to enter, ⌫ to erase, arrow keys to navigate, Ctrl+Z to undo.</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LUDO HOW TO PLAY MODAL -->
+<div class="htp-overlay" id="ludo-htp-overlay" onclick="if(event.target===this)closeLudoHTP()">
+  <div class="htp-modal">
+    <div class="htp-header">
+      <div class="htp-title">How to <span>Play Ludo</span></div>
+      <button class="htp-close" onclick="closeLudoHTP()">✕</button>
+    </div>
+    <div class="htp-body">
+      <div>
+        <div class="htp-section-title">Objective</div>
+        <div class="htp-rule"><div class="htp-rule-icon">🏆</div><div class="htp-rule-text"><strong>Race to Win</strong><span>Be the first player to move all 4 of your tokens from your home base to the finish triangle in the centre.</span></div></div>
+      </div>
+      <div>
+        <div class="htp-section-title">How to Play</div>
+        <div class="htp-rule"><div class="htp-rule-icon">🎲</div><div class="htp-rule-text"><strong>Roll the Dice</strong><span>Click the dice on your turn. You must roll a 6 to move a token out of your starting yard.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">👆</div><div class="htp-rule-text"><strong>Move a Token</strong><span>After rolling, click any highlighted token to move it that many steps forward.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">💥</div><div class="htp-rule-text"><strong>Capture</strong><span>Land on an opponent's token to send it back to their yard. Safe squares (marked with a star ⭐) protect tokens from capture.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">🔁</div><div class="htp-rule-text"><strong>Roll Again</strong><span>Roll a 6 and you get an extra turn! Get a token home and you also roll again.</span></div></div>
+        <div class="htp-rule"><div class="htp-rule-icon">🎯</div><div class="htp-rule-text"><strong>Reach Home</strong><span>Guide your tokens along the coloured path and into the home column. Exact roll needed to enter the home triangle.</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD MODAL -->
+<div class="htp-overlay" id="leaderboard-overlay" onclick="if(event.target===this)closeLeaderboard()">
+  <div class="htp-modal">
+    <div class="htp-header">
+      <div class="htp-title">🏆 <span>Leaderboard</span></div>
+      <button class="htp-close" onclick="closeLeaderboard()">✕</button>
+    </div>
+    <div class="htp-body">
+      <div class="leaderboard-tabs">
+        <button class="lb-tab active" data-filter="all" onclick="filterLeaderboard('all',this)">All</button>
+        <button class="lb-tab" data-filter="easy" onclick="filterLeaderboard('easy',this)">Easy</button>
+        <button class="lb-tab" data-filter="medium" onclick="filterLeaderboard('medium',this)">Medium</button>
+        <button class="lb-tab" data-filter="hard" onclick="filterLeaderboard('hard',this)">Hard</button>
+      </div>
+      <div class="leaderboard-table">
+        <div class="lb-header">
+          <span class="lb-rank">#</span>
+          <span class="lb-diff">Diff</span>
+          <span class="lb-time">Time</span>
+          <span class="lb-moves">Moves</span>
+          <span class="lb-date">Date</span>
+        </div>
+        <div class="lb-rows" id="leaderboard-rows"><div class="lb-empty">No scores yet.</div></div>
+      </div>
+      <div class="lb-actions"><button class="action-btn danger" onclick="clearLeaderboard()">Clear All Scores</button></div>
+    </div>
+  </div>
+</div>
 
 <!-- WIN OVERLAY -->
 <div class="overlay" id="win-overlay">
@@ -1020,519 +977,853 @@ body.light .win-card { box-shadow: 0 0 0 1px rgba(91,71,224,0.2), 0 30px 80px rg
       </div>
       <div class="win-headline" id="win-headline">Puzzle <em>Solved!</em></div>
       <div class="win-badge" id="win-badge">⚡ Excellent Work</div>
-      <p class="win-message" id="win-message">You cracked it! Every row, column and box is perfectly filled.</p>
-      <div class="win-stats">
-        <div class="win-stat"><span class="win-stat-val" id="win-time">00:00</span><span class="win-stat-lbl">Time</span></div>
-        <div class="win-stat"><span class="win-stat-val" id="win-moves">0</span><span class="win-stat-lbl">Moves</span></div>
-        <div class="win-stat"><span class="win-stat-val" id="win-diff">Easy</span><span class="win-stat-lbl">Level</span></div>
-      </div>
-      <div class="win-stars" id="win-stars">
-        <span class="win-star" id="star0">⭐</span>
-        <span class="win-star" id="star1">⭐</span>
-        <span class="win-star" id="star2">⭐</span>
-      </div>
+      <p class="win-message" id="win-message">You did it!</p>
       <div class="win-btns">
-        <button class="win-btn secondary" onclick="closeWin()">Keep Playing</button>
-        <button class="win-btn" onclick="newGame();closeWin()">New Game</button>
+        <button class="win-btn secondary" onclick="closeWin()">Close</button>
+        <button class="win-btn" id="win-new-btn" onclick="newGame();closeWin()">New Game</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
+<canvas id="confetti-canvas"></canvas>
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── STATE ────────────────────────────────────────────────
-let board = [], solution = [], fixed = [], notes = [];
-let selected = null, moves = 0, difficulty = 'easy';
-let notesMode = false, timerSec = 0, timerInterval = null;
-let history = [], gameOver = false;
-let isPaused = false;
+// ═══════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════
+let activeTab = 'sudoku';
 
-// ─── DIFFICULTY ───────────────────────────────────────────
-const CLUES = { easy: 40, medium: 30, hard: 22 };
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('content-' + tab).classList.add('active');
 
-// ─── SUDOKU GENERATOR ─────────────────────────────────────
-function generateSudoku() {
-  const grid = Array.from({length:9}, ()=>Array(9).fill(0));
-  solveSudoku(grid, true);
-  return grid;
-}
-
-function solveSudoku(grid, randomize=false) {
-  for (let r=0; r<9; r++) {
-    for (let c=0; c<9; c++) {
-      if (grid[r][c] === 0) {
-        let nums = [1,2,3,4,5,6,7,8,9];
-        if (randomize) nums = shuffle(nums);
-        for (let n of nums) {
-          if (isValid(grid,r,c,n)) {
-            grid[r][c]=n;
-            if (solveSudoku(grid,randomize)) return true;
-            grid[r][c]=0;
-          }
-        }
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-function isValid(grid, r, c, n) {
-  for (let i=0; i<9; i++) {
-    if (grid[r][i]===n || grid[i][c]===n) return false;
-  }
-  const br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
-  for (let i=0;i<3;i++) for (let j=0;j<3;j++) {
-    if (grid[br+i][bc+j]===n) return false;
-  }
-  return true;
-}
-
-function shuffle(arr) {
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
-}
-
-function createPuzzle(sol, clues) {
-  const puzzle=sol.map(r=>[...r]);
-  const cells=shuffle([...Array(81).keys()]);
-  let removed=0, toRemove=81-clues;
-  for (let idx of cells) {
-    if(removed>=toRemove) break;
-    const r=Math.floor(idx/9),c=idx%9;
-    puzzle[r][c]=0; removed++;
-  }
-  return puzzle;
-}
-
-// ─── PAUSE ────────────────────────────────────────────────
-function togglePause() {
-  if (gameOver) return;
-  isPaused = !isPaused;
-  const btn = document.getElementById('pause-btn');
-  const icon = document.getElementById('pause-icon');
-  const label = document.getElementById('pause-label');
-  const overlay = document.getElementById('pause-overlay');
-
-  if (isPaused) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    btn.classList.add('paused');
-    icon.textContent = '▶';
-    label.textContent = 'Resume';
-    overlay.classList.add('show');
-    showToast('Game paused');
-  } else {
-    timerInterval = setInterval(tickTimer, 1000);
-    btn.classList.remove('paused');
-    icon.textContent = '⏸';
-    label.textContent = 'Pause';
-    overlay.classList.remove('show');
-    showToast('Game resumed');
-  }
-}
-
-// ─── GAME INIT ────────────────────────────────────────────
-function newGame() {
-  gameOver = false; moves = 0; history = [];
-  timerSec = 0; isPaused = false;
-  clearInterval(timerInterval);
-
-  // Reset pause UI
-  document.getElementById('pause-btn').classList.remove('paused');
-  document.getElementById('pause-icon').textContent = '⏸';
-  document.getElementById('pause-label').textContent = 'Pause';
-  document.getElementById('pause-overlay').classList.remove('show');
-
-  timerInterval = setInterval(tickTimer, 1000);
-  updateTimerDisplay(); updateMovesDisplay();
-
-  solution = generateSudoku();
-  const puzzle = createPuzzle(solution, CLUES[difficulty]);
-  board = puzzle.map(r=>[...r]);
-  fixed = puzzle.map(r=>r.map(v=>v!==0));
-  notes = Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
-  selected = null;
-
-  renderGrid(); updateRemaining(); updateDiffBadge();
-}
-
-function resetGame() {
-  if (gameOver) return;
-  for(let r=0;r<9;r++) for(let c=0;c<9;c++) { if(!fixed[r][c]) board[r][c]=0; }
-  notes = Array.from({length:9},()=>Array.from({length:9},()=>new Set()));
-  moves=0; history=[];
-  timerSec=0; isPaused=false;
-  clearInterval(timerInterval);
-  timerInterval=setInterval(tickTimer,1000);
-  document.getElementById('pause-btn').classList.remove('paused');
-  document.getElementById('pause-icon').textContent='⏸';
-  document.getElementById('pause-label').textContent='Pause';
-  document.getElementById('pause-overlay').classList.remove('show');
-  updateMovesDisplay(); updateTimerDisplay();
-  renderGrid(); updateRemaining();
-  showToast('Board reset');
-}
-
-// ─── DIFFICULTY ──────────────────────────────────────────
-function setDifficulty(d, btn) {
-  difficulty=d;
-  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  newGame();
-}
-
-function updateDiffBadge() {
-  const badge=document.getElementById('diff-badge');
-  badge.className='status-badge '+difficulty;
-  badge.textContent=difficulty.toUpperCase();
-}
-
-// ─── RENDER ──────────────────────────────────────────────
-function renderGrid() {
-  const grid=document.getElementById('grid');
-  grid.innerHTML='';
-  for(let r=0;r<9;r++) {
-    for(let c=0;c<9;c++) {
-      const cell=document.createElement('div');
-      cell.className='cell'+(fixed[r][c]?' fixed':'');
-      cell.dataset.r=r; cell.dataset.c=c;
-      setCellContent(cell,r,c);
-      cell.addEventListener('click',()=>selectCell(r,c));
-      grid.appendChild(cell);
-    }
-  }
-  highlightSelected();
-}
-
-function setCellContent(cell,r,c) {
-  const val=board[r][c], noteSet=notes[r][c];
-  cell.innerHTML='';
-  if(val!==0) {
-    cell.classList.remove('user-filled','error');
-    if(!fixed[r][c]) cell.classList.add('user-filled');
-    const span=document.createElement('span');
-    span.className='num-val'; span.textContent=val;
-    cell.appendChild(span);
-  } else if(noteSet.size>0) {
-    const ng=document.createElement('div'); ng.className='notes-grid';
-    for(let n=1;n<=9;n++) {
-      const nd=document.createElement('div'); nd.className='note';
-      nd.textContent=noteSet.has(n)?n:''; ng.appendChild(nd);
-    }
-    cell.appendChild(ng);
-  }
-}
-
-function updateCell(r,c) {
-  const idx=r*9+c;
-  const cell=document.querySelectorAll('.cell')[idx];
-  if(!cell) return;
-  setCellContent(cell,r,c);
-  highlightSelected();
-}
-
-// ─── SELECTION ───────────────────────────────────────────
-function selectCell(r,c) {
-  if(isPaused) return;
-  selected={r,c};
-  highlightSelected();
-}
-
-function highlightSelected() {
-  const cells=document.querySelectorAll('.cell');
-  cells.forEach(cell=>{
-    const r=+cell.dataset.r, c=+cell.dataset.c;
-    cell.classList.remove('selected','same-num','same-row-col','error');
-    if(board[r][c]!==0&&solution[r][c]!==board[r][c]&&!fixed[r][c]) cell.classList.add('error');
+  // Show/hide header stats
+  const sudokuStats = ['sudoku-header-stat', 'sudoku-moves-stat', 'how-to-play-btn', 'leaderboard-btn'];
+  sudokuStats.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = tab === 'sudoku' ? '' : 'none';
   });
-  if(!selected) return;
-  const {r:sr,c:sc}=selected, selVal=board[sr][sc];
-  cells.forEach(cell=>{
-    const r=+cell.dataset.r, c=+cell.dataset.c;
-    if(r===sr&&c===sc){cell.classList.add('selected');return;}
-    const sameBox=Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3);
-    if(r===sr||c===sc||sameBox) cell.classList.add('same-row-col');
-    if(selVal!==0&&board[r][c]===selVal) cell.classList.add('same-num');
-  });
-}
 
-// ─── INPUT ───────────────────────────────────────────────
-function enterNum(n) {
-  if(!selected||gameOver||isPaused) return;
-  const {r,c}=selected;
-  if(fixed[r][c]) return;
-
-  if(notesMode&&board[r][c]===0) {
-    const ns=notes[r][c];
-    ns.has(n)?ns.delete(n):ns.add(n);
-    updateCell(r,c); return;
+  // Show ludo HTP button if on ludo tab
+  let ludoHtpBtn = document.getElementById('ludo-htp-header-btn');
+  if (tab === 'ludo') {
+    if (!ludoHtpBtn) {
+      ludoHtpBtn = document.createElement('button');
+      ludoHtpBtn.id = 'ludo-htp-header-btn';
+      ludoHtpBtn.className = 'htp-btn';
+      ludoHtpBtn.textContent = '? How to Play';
+      ludoHtpBtn.onclick = () => document.getElementById('ludo-htp-overlay').classList.add('show');
+      document.querySelector('.header-right').insertBefore(ludoHtpBtn, document.getElementById('theme-toggle'));
+    }
+    ludoHtpBtn.style.display = '';
+  } else if (ludoHtpBtn) {
+    ludoHtpBtn.style.display = 'none';
   }
-
-  if(board[r][c]===n) return;
-  history.push({r,c,prev:board[r][c],prevNotes:new Set(notes[r][c])});
-  notes[r][c].clear();
-  board[r][c]=n; moves++;
-  updateMovesDisplay();
-  updateCell(r,c); updateRemaining();
-  if(n===solution[r][c]) checkWin();
 }
 
-function clearSelected() {
-  if(!selected||gameOver||isPaused) return;
-  const {r,c}=selected;
-  if(fixed[r][c]) return;
-  history.push({r,c,prev:board[r][c],prevNotes:new Set(notes[r][c])});
-  board[r][c]=0; notes[r][c].clear(); moves++;
-  updateMovesDisplay(); updateCell(r,c); updateRemaining();
+// ═══════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('gamehub-theme', isLight ? 'light' : 'dark');
+  if (ludoGameStarted) drawBoard();
+}
+(function initTheme() {
+  const saved = localStorage.getItem('gamehub-theme') || localStorage.getItem('sudoku-theme');
+  if (saved === 'light') { document.body.classList.add('light'); document.getElementById('theme-toggle').textContent = '☀️'; }
+})();
+
+function closeHTP() { document.getElementById('htp-overlay').classList.remove('show'); }
+function openHTP() { document.getElementById('htp-overlay').classList.add('show'); }
+function closeLudoHTP() { document.getElementById('ludo-htp-overlay').classList.remove('show'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeHTP(); closeLudoHTP(); closeWin(); closeLeaderboard(); } });
+
+// Toast
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function undoMove() {
-  if(!history.length||isPaused) return;
-  const last=history.pop();
-  board[last.r][last.c]=last.prev; notes[last.r][last.c]=last.prevNotes;
-  moves=Math.max(0,moves-1);
-  updateMovesDisplay(); updateCell(last.r,last.c); updateRemaining();
-}
-
-// ─── NOTES MODE ──────────────────────────────────────────
-function toggleNotes() {
-  notesMode=!notesMode;
-  const t=document.getElementById('notes-toggle');
-  notesMode?t.classList.add('on'):t.classList.remove('on');
-}
-
-// ─── KEYBOARD ────────────────────────────────────────────
-document.addEventListener('keydown',e=>{
-  if(e.key>='1'&&e.key<='9'){enterNum(+e.key);return;}
-  if(e.key==='Backspace'||e.key==='Delete'||e.key==='0'){clearSelected();return;}
-  if(e.key==='z'&&(e.ctrlKey||e.metaKey)){undoMove();return;}
-  if(e.key===' '||e.key==='p'||e.key==='P'){e.preventDefault();togglePause();return;}
-  if(!selected) return;
-  const {r,c}=selected;
-  if(e.key==='ArrowUp'&&r>0) selectCell(r-1,c);
-  else if(e.key==='ArrowDown'&&r<8) selectCell(r+1,c);
-  else if(e.key==='ArrowLeft'&&c>0) selectCell(r,c-1);
-  else if(e.key==='ArrowRight'&&c<8) selectCell(r,c+1);
-});
-
-// ─── WIN CHECK ───────────────────────────────────────────
-function checkWin() {
-  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(board[r][c]!==solution[r][c]) return;
-  clearInterval(timerInterval); gameOver=true;
-
-  const timeStr=document.getElementById('timer').textContent;
-  const [mm,ss]=timeStr.split(':').map(Number);
-  const totalSec=mm*60+ss;
-
-  const msgs={
-    easy:{fast:{emoji:'🏆',headline:'Blazing <em>Fast!</em>',badge:'⚡ Speed Demon',msg:'You tore through that Easy puzzle like a pro. Pure instinct!'},mid:{emoji:'🎉',headline:'Well <em>Done!</em>',badge:'✨ Smooth Solve',msg:'Nice and clean! You navigated that puzzle with real confidence.'},slow:{emoji:'😊',headline:'Puzzle <em>Solved!</em>',badge:'🎯 Mission Complete',msg:"Every journey starts somewhere. You finished — that's what counts!"}},
-    medium:{fast:{emoji:'🔥',headline:'On <em>Fire!</em>',badge:'🔥 Lightning Mind',msg:"That Medium puzzle barely stood a chance. Exceptional solving!"},mid:{emoji:'💜',headline:'Brilliant <em>Work!</em>',badge:'💡 Sharp Thinker',msg:'Solid deduction all the way through. Medium difficulty, maximum style.'},slow:{emoji:'🌟',headline:'You <em>Got It!</em>',badge:'🧩 Puzzle Tamer',msg:'Medium is no joke and you conquered it. Patience always wins.'}},
-    hard:{fast:{emoji:'👑',headline:'Absolutely <em>Genius!</em>',badge:'👑 Grandmaster',msg:"Hard difficulty at that speed? You're playing in a different league."},mid:{emoji:'🚀',headline:'Outstanding <em>Solve!</em>',badge:'🧠 Logic Master',msg:'Hard puzzles demand hard thinking. You delivered brilliantly.'},slow:{emoji:'💎',headline:'Against All <em>Odds!</em>',badge:'💎 Iron Will',msg:'Hard is HARD. You stayed the course and cracked it. Legendary patience.'}},
-  };
-
-  const thresholds={easy:[180,480],medium:[300,720],hard:[480,1200]};
-  const [t1,t2]=thresholds[difficulty];
-  const tier=totalSec<t1?'fast':totalSec<t2?'mid':'slow';
-  const m=msgs[difficulty][tier];
-  const stars=tier==='fast'?3:tier==='mid'?2:1;
-
-  document.getElementById('win-emoji').textContent=m.emoji;
-  document.getElementById('win-headline').innerHTML=m.headline;
-  document.getElementById('win-badge').innerHTML=m.badge;
-  document.getElementById('win-message').textContent=m.msg;
-  document.getElementById('win-time').textContent=timeStr;
-  document.getElementById('win-moves').textContent=moves;
-  document.getElementById('win-diff').textContent=difficulty.charAt(0).toUpperCase()+difficulty.slice(1);
-
-  for(let i=0;i<3;i++){
-    const el=document.getElementById('star'+i);
-    el.classList.remove('lit');
-    if(i<stars) setTimeout(()=>el.classList.add('lit'),1300+i*220);
-  }
-
-  // Save to localStorage
-  saveResult(timeStr, totalSec, moves, stars, difficulty);
-
-  setTimeout(()=>{document.getElementById('win-overlay').classList.add('show');launchConfetti();},400);
-}
-
-function closeWin() {
-  document.getElementById('win-overlay').classList.remove('show');
-  stopConfetti();
-}
-
-// ─── RESULTS (localStorage) ───────────────────────────────
-const RESULTS_KEY = 'sudoku_results_v2';
-
-function saveResult(timeStr, totalSec, movesCount, stars, diff) {
-  const results = loadResults();
-  const entry = {
-    time: timeStr,
-    totalSec,
-    moves: movesCount,
-    stars,
-    diff,
-    date: new Date().toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}),
-    ts: Date.now()
-  };
-  results.unshift(entry); // newest first
-  // Keep max 50 entries
-  const trimmed = results.slice(0, 50);
-  try { localStorage.setItem(RESULTS_KEY, JSON.stringify(trimmed)); } catch(e) {}
-  renderResults();
-}
-
-function loadResults() {
-  try {
-    const raw = localStorage.getItem(RESULTS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e) { return []; }
-}
-
-function clearResults() {
-  if (!confirm('Clear all saved results? This cannot be undone.')) return;
-  try { localStorage.removeItem(RESULTS_KEY); } catch(e) {}
-  renderResults();
-  showToast('Results cleared');
-}
-
-const RANK_MEDALS = ['🥇','🥈','🥉'];
-const RANK_CLASSES = ['gold','silver','bronze'];
-
-function renderResults() {
-  const list = document.getElementById('results-list');
-  const results = loadResults();
-
-  if (!results.length) {
-    list.innerHTML = '<div class="result-empty"><span class="result-empty-icon">🏆</span>Solve a puzzle to see your results here.<br>They persist until you clear your browser cache.</div>';
-    return;
-  }
-
-  // Sort by totalSec ascending for ranking (best time = rank 1)
-  const sorted = [...results].sort((a,b)=>a.totalSec-b.totalSec);
-
-  list.innerHTML = results.map((r, idx) => {
-    // Find rank in sorted list
-    const rankIdx = sorted.findIndex(s => s.ts === r.ts);
-    const medal = RANK_MEDALS[rankIdx] || '';
-    const rankClass = RANK_CLASSES[rankIdx] || '';
-    const starsStr = '⭐'.repeat(r.stars) + '☆'.repeat(3-r.stars);
-    return `
-      <div class="result-item ${rankClass}">
-        <div class="result-top">
-          <span class="result-rank">${medal || ('#'+(rankIdx+1))}</span>
-          <span class="result-diff-badge ${r.diff}">${r.diff}</span>
-        </div>
-        <div class="result-time">${r.time}</div>
-        <div class="result-bottom">
-          <span class="result-moves">${r.moves} moves</span>
-          <span class="result-stars">${starsStr}</span>
-        </div>
-        <div class="result-date">${r.date}</div>
-      </div>`;
-  }).join('');
-}
-
-// ─── CONFETTI ────────────────────────────────────────────
-let confettiAnimId=null, confettiPieces=[];
-
+// Confetti
+let confettiAnimId = null;
 function launchConfetti() {
-  const canvas=document.getElementById('confetti-canvas');
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  const colors=['#7c6af7','#f76a8c','#6af7c8','#f0c060','#a78bfa','#fb7185','#34d399'];
-  const shapes=['rect','circle','ribbon'];
-  confettiPieces=[];
-  for(let i=0;i<160;i++){
-    const side=i<80?0:1;
-    confettiPieces.push({x:side===0?canvas.width*0.2:canvas.width*0.8,y:-10,vx:(Math.random()-0.5)*14+(side===0?4:-4),vy:-(Math.random()*12+8),rot:Math.random()*360,rotV:(Math.random()-0.5)*12,color:colors[Math.floor(Math.random()*colors.length)],shape:shapes[Math.floor(Math.random()*shapes.length)],w:Math.random()*10+6,h:Math.random()*6+4,opacity:1,gravity:0.35+Math.random()*0.2});
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const colors = ['#7c6af7','#f76a8c','#6af7c8','#f0c060','#a78bfa','#fb7185','#34d399'];
+  const pieces = [];
+  for (let i = 0; i < 160; i++) {
+    const side = i < 80 ? 0 : 1;
+    pieces.push({ x: side===0?canvas.width*0.2:canvas.width*0.8, y: -10, vx: (Math.random()-0.5)*14+(side===0?4:-4), vy: -(Math.random()*12+8), rot: Math.random()*360, rotV: (Math.random()-0.5)*12, color: colors[Math.floor(Math.random()*colors.length)], w: Math.random()*10+6, h: Math.random()*6+4, opacity: 1, gravity: 0.35+Math.random()*0.2 });
   }
-  let frame=0;
-  function draw(){
+  let frame = 0;
+  function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    confettiPieces.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy; p.vy+=p.gravity; p.vx*=0.99; p.rot+=p.rotV;
+    pieces.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=p.gravity; p.rot+=p.rotV;
       if(p.y>canvas.height*0.7) p.opacity-=0.018;
       p.opacity=Math.max(0,p.opacity);
       ctx.save(); ctx.globalAlpha=p.opacity; ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.color;
-      if(p.shape==='circle'){ctx.beginPath();ctx.arc(0,0,p.w/2,0,Math.PI*2);ctx.fill();}
-      else if(p.shape==='ribbon'){ctx.beginPath();ctx.moveTo(-p.w/2,0);ctx.quadraticCurveTo(0,-p.h*1.5,p.w/2,0);ctx.quadraticCurveTo(0,p.h*1.5,-p.w/2,0);ctx.fill();}
-      else{ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);}
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
       ctx.restore();
     });
     frame++;
-    const alive=confettiPieces.some(p=>p.opacity>0);
-    if(alive&&frame<220) confettiAnimId=requestAnimationFrame(draw);
+    if(pieces.some(p=>p.opacity>0)&&frame<220) confettiAnimId=requestAnimationFrame(draw);
     else ctx.clearRect(0,0,canvas.width,canvas.height);
   }
-  confettiAnimId=requestAnimationFrame(draw);
+  confettiAnimId = requestAnimationFrame(draw);
 }
-
 function stopConfetti() {
   if(confettiAnimId){cancelAnimationFrame(confettiAnimId);confettiAnimId=null;}
   const canvas=document.getElementById('confetti-canvas');
   canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
 }
+function closeWin() { document.getElementById('win-overlay').classList.remove('show'); stopConfetti(); }
 
-// ─── TIMER ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// SUDOKU ENGINE
+// ═══════════════════════════════════════════════════════
+let board=[],solution=[],fixed=[],notes=[],selected=null,moves=0,difficulty='easy',notesMode=false,timerSec=0,timerInterval=null,history=[],gameOver=false;
+const CLUES={easy:40,medium:30,hard:22};
+
+function generateSudoku(){const g=Array.from({length:9},()=>Array(9).fill(0));solveSudoku(g,true);return g;}
+function solveSudoku(g,rand=false){for(let r=0;r<9;r++)for(let c=0;c<9;c++){if(g[r][c]===0){let nums=[1,2,3,4,5,6,7,8,9];if(rand)nums=shuffle(nums);for(let n of nums){if(isValid(g,r,c,n)){g[r][c]=n;if(solveSudoku(g,rand))return true;g[r][c]=0;}}return false;}}return true;}
+function isValid(g,r,c,n){for(let i=0;i<9;i++){if(g[r][i]===n||g[i][c]===n)return false;}const br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;for(let i=0;i<3;i++)for(let j=0;j<3;j++){if(g[br+i][bc+j]===n)return false;}return true;}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function createPuzzle(sol,clues){const p=sol.map(r=>[...r]);const cells=shuffle([...Array(81).keys()]);let removed=0,toRemove=81-clues;for(let idx of cells){if(removed>=toRemove)break;p[Math.floor(idx/9)][idx%9]=0;removed++;}return p;}
+
+function newGame(){
+  gameOver=false;moves=0;history=[];timerSec=0;clearInterval(timerInterval);timerInterval=setInterval(tickTimer,1000);updateTimerDisplay();updateMovesDisplay();
+  solution=generateSudoku();const puzzle=createPuzzle(solution,CLUES[difficulty]);
+  board=puzzle.map(r=>[...r]);fixed=puzzle.map(r=>r.map(v=>v!==0));notes=Array.from({length:9},()=>Array.from({length:9},()=>new Set()));selected=null;
+  renderGrid();updateRemaining();updateDiffBadge();
+}
+function resetGame(){if(gameOver)return;for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(!fixed[r][c])board[r][c]=0;notes=Array.from({length:9},()=>Array.from({length:9},()=>new Set()));moves=0;history=[];timerSec=0;updateMovesDisplay();updateTimerDisplay();renderGrid();updateRemaining();showToast('Board reset');}
+function setDifficulty(d,btn){difficulty=d;document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');newGame();}
+function updateDiffBadge(){const badge=document.getElementById('diff-badge');badge.className='status-badge '+difficulty;badge.textContent=difficulty.toUpperCase();}
+
+function renderGrid(){const grid=document.getElementById('grid');grid.innerHTML='';for(let r=0;r<9;r++)for(let c=0;c<9;c++){const cell=document.createElement('div');cell.className='cell'+(fixed[r][c]?' fixed':'');cell.dataset.r=r;cell.dataset.c=c;setCellContent(cell,r,c);cell.addEventListener('click',()=>selectCell(r,c));grid.appendChild(cell);}highlightSelected();}
+function setCellContent(cell,r,c){const val=board[r][c];const ns=notes[r][c];cell.innerHTML='';if(val!==0){cell.classList.remove('user-filled','error');if(!fixed[r][c])cell.classList.add('user-filled');const span=document.createElement('span');span.className='num-val';span.textContent=val;cell.appendChild(span);}else if(ns.size>0){const ng=document.createElement('div');ng.className='notes-grid';for(let n=1;n<=9;n++){const nd=document.createElement('div');nd.className='note';nd.textContent=ns.has(n)?n:'';ng.appendChild(nd);}cell.appendChild(ng);}}
+function updateCell(r,c){const cells=document.querySelectorAll('.cell');const cell=cells[r*9+c];if(!cell)return;setCellContent(cell,r,c);highlightSelected();}
+function selectCell(r,c){selected={r,c};highlightSelected();}
+function highlightSelected(){const cells=document.querySelectorAll('.cell');cells.forEach(cell=>{const r=+cell.dataset.r,c=+cell.dataset.c;cell.classList.remove('selected','same-num','same-row-col','error');if(board[r][c]!==0&&solution[r][c]!==board[r][c]&&!fixed[r][c])cell.classList.add('error');});if(!selected)return;const{r:sr,c:sc}=selected;const selVal=board[sr][sc];cells.forEach(cell=>{const r=+cell.dataset.r,c=+cell.dataset.c;if(r===sr&&c===sc){cell.classList.add('selected');return;}const sameBox=Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3);if(r===sr||c===sc||sameBox)cell.classList.add('same-row-col');if(selVal!==0&&board[r][c]===selVal)cell.classList.add('same-num');});}
+
+function enterNum(n){if(!selected||gameOver)return;const{r,c}=selected;if(fixed[r][c])return;if(notesMode&&board[r][c]===0){const ns=notes[r][c];ns.has(n)?ns.delete(n):ns.add(n);updateCell(r,c);return;}if(board[r][c]===n)return;history.push({r,c,prev:board[r][c],prevNotes:new Set(notes[r][c])});notes[r][c].clear();board[r][c]=n;moves++;updateMovesDisplay();updateCell(r,c);updateRemaining();if(n===solution[r][c])checkWin();}
+function clearSelected(){if(!selected||gameOver)return;const{r,c}=selected;if(fixed[r][c])return;history.push({r,c,prev:board[r][c],prevNotes:new Set(notes[r][c])});board[r][c]=0;notes[r][c].clear();moves++;updateMovesDisplay();updateCell(r,c);updateRemaining();}
+function undoMove(){if(!history.length)return;const last=history.pop();board[last.r][last.c]=last.prev;notes[last.r][last.c]=last.prevNotes;moves=Math.max(0,moves-1);updateMovesDisplay();updateCell(last.r,last.c);updateRemaining();}
+function toggleNotes(){notesMode=!notesMode;const t=document.getElementById('notes-toggle');notesMode?t.classList.add('on'):t.classList.remove('on');}
+
+document.addEventListener('keydown',e=>{
+  if(activeTab!=='sudoku')return;
+  if(e.key>='1'&&e.key<='9'){enterNum(+e.key);return;}
+  if(e.key==='Backspace'||e.key==='Delete'||e.key==='0'){clearSelected();return;}
+  if(e.key==='z'&&(e.ctrlKey||e.metaKey)){undoMove();return;}
+  if(!selected)return;
+  const{r,c}=selected;
+  if(e.key==='ArrowUp'&&r>0)selectCell(r-1,c);
+  else if(e.key==='ArrowDown'&&r<8)selectCell(r+1,c);
+  else if(e.key==='ArrowLeft'&&c>0)selectCell(r,c-1);
+  else if(e.key==='ArrowRight'&&c<8)selectCell(r,c+1);
+});
+
+function checkWin(){
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){if(board[r][c]!==solution[r][c])return;}
+  clearInterval(timerInterval);gameOver=true;
+  const timeStr=document.getElementById('timer').textContent;
+  const[mm,ss]=timeStr.split(':').map(Number);const totalSec=mm*60+ss;
+  saveScore({difficulty,timeSeconds:totalSec,moves,date:new Date().toISOString()});
+  document.getElementById('win-emoji').textContent='🏆';
+  document.getElementById('win-headline').innerHTML='Puzzle <em>Solved!</em>';
+  document.getElementById('win-badge').innerHTML='⚡ Excellent Work';
+  document.getElementById('win-message').textContent='Every row, column and box is perfectly filled!';
+  document.getElementById('win-new-btn').onclick=()=>{newGame();closeWin();};
+  setTimeout(()=>{document.getElementById('win-overlay').classList.add('show');launchConfetti();},400);
+}
+
 function tickTimer(){timerSec++;updateTimerDisplay();}
 function updateTimerDisplay(){const m=Math.floor(timerSec/60),s=timerSec%60;document.getElementById('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
 function updateMovesDisplay(){document.getElementById('moves-display').textContent=moves;}
+function updateRemaining(){const counts=Array(10).fill(0);for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]>0)counts[board[r][c]]++;for(let n=1;n<=9;n++){const el=document.getElementById('r'+n);if(el)el.textContent=(9-counts[n])>0?(9-counts[n]):'';}updateProgress();}
+function updateProgress(){let filled=0;for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]===solution[r][c])filled++;const progress=Math.round((filled/81)*100);const fill=document.getElementById('progress-fill');const text=document.getElementById('progress-text');if(fill)fill.style.width=progress+'%';if(text)text.textContent=filled+'/81 cells ('+progress+'%)';}
 
-// ─── HOW TO PLAY ─────────────────────────────────────────
-function openHTP(){document.getElementById('htp-overlay').classList.add('show');}
-function closeHTP(){document.getElementById('htp-overlay').classList.remove('show');}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeHTP();closeWin();}});
+// Leaderboard
+const LEADERBOARD_KEY='sudoku-leaderboard';
+function getLeaderboard(){const d=localStorage.getItem(LEADERBOARD_KEY);return d?JSON.parse(d):[];}
+function saveScore(score){const lb=getLeaderboard();lb.push(score);lb.sort((a,b)=>a.timeSeconds-b.timeSeconds);localStorage.setItem(LEADERBOARD_KEY,JSON.stringify(lb.slice(0,100)));}
+function openLeaderboard(){document.getElementById('leaderboard-overlay').classList.add('show');renderLeaderboard('all');}
+function closeLeaderboard(){document.getElementById('leaderboard-overlay').classList.remove('show');}
+function filterLeaderboard(filter,btn){document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderLeaderboard(filter);}
+function renderLeaderboard(filter){const lb=getLeaderboard();const filtered=filter==='all'?lb:lb.filter(s=>s.difficulty===filter);const container=document.getElementById('leaderboard-rows');if(filtered.length===0){container.innerHTML='<div class="lb-empty">No scores yet.</div>';return;}container.innerHTML=filtered.map((score,i)=>{const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';const date=new Date(score.date).toLocaleDateString();const timeStr=formatTime(score.timeSeconds);return`<div class="lb-row"><span class="lb-rank ${rankClass}">${i+1}</span><span class="lb-diff ${score.difficulty}">${score.difficulty}</span><span class="lb-time">${timeStr}</span><span class="lb-moves">${score.moves}</span><span class="lb-date">${date}</span></div>`;}).join('');}
+function clearLeaderboard(){if(confirm('Clear all scores?')){localStorage.removeItem(LEADERBOARD_KEY);renderLeaderboard('all');showToast('Leaderboard cleared');}}
+function formatTime(seconds){const m=Math.floor(seconds/60),s=seconds%60;return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
 
-// ─── THEME ───────────────────────────────────────────────
-function toggleTheme(){
-  const isLight=document.body.classList.toggle('light');
-  document.getElementById('theme-toggle').textContent=isLight?'☀️':'🌙';
-  localStorage.setItem('sudoku-theme',isLight?'light':'dark');
+// ═══════════════════════════════════════════════════════
+// LUDO SOUNDS (Web Audio API)
+// ═══════════════════════════════════════════════════════
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
 }
-(function initTheme(){
-  const saved=localStorage.getItem('sudoku-theme');
-  if(saved==='light'){
-    document.body.classList.add('light');
-    document.addEventListener('DOMContentLoaded',()=>{
-      const btn=document.getElementById('theme-toggle');
-      if(btn) btn.textContent='☀️';
+
+function playDiceRoll() {
+  try {
+    const ctx = getAudioCtx();
+    // Rattling noise bursts
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.06, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let j = 0; j < data.length; j++) data[j] = (Math.random() * 2 - 1) * 0.3;
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 800 + Math.random() * 400;
+        src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        src.start();
+      }, i * 70);
+    }
+    // Final thud
+    setTimeout(() => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); osc.stop(ctx.currentTime + 0.2);
+    }, 440);
+  } catch(e) {}
+}
+
+function playCaptureSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Descending "bonk" + impact
+    [300, 200, 120].forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq * 1.5, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.35, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.15);
+      }, i * 80);
+    });
+  } catch(e) {}
+}
+
+function playHomeSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Ascending celebratory arpeggio
+    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.35);
+      }, i * 120);
+    });
+  } catch(e) {}
+}
+
+function playAllHomeSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Full chord + shimmer
+    const chord = [523, 659, 784, 1047, 1319];
+    chord.forEach((freq, i) => {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = i < 3 ? 'sine' : 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.8);
+      }, i * 60);
+    });
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// LUDO ENGINE
+// ═══════════════════════════════════════════════════════
+const PLAYER_COLORS = ['#f76a8c','#6af7c8','#f0c060','#7c6af7'];
+const PLAYER_NAMES_DEFAULT = ['Red','Green','Yellow','Blue'];
+const PLAYER_DARK_TEXT = [false, true, true, false]; // which colors need dark text
+
+let ludoNumPlayers = 3;
+let ludoPlayerNames = ['Red','Green','Yellow','Blue'];
+let ludoGameStarted = false;
+
+// Ludo board: 15x15 grid
+// Path positions: each player has 52 steps on the main track + 5 home column + home
+// Standard Ludo path definition (0-based index on 52-cell track)
+// Starting positions on track for each player: 0, 13, 26, 39
+const PLAYER_START = [0, 13, 26, 39];
+const PLAYER_HOME_ENTRY = [50, 11, 24, 37]; // last track cell before home column
+
+// 52-cell track coordinates on the 15x15 board
+// Row/col pairs for each track cell (standard Ludo layout)
+const TRACK = [
+  // Red's starting area going right (cells 0-5)
+  [6,1],[6,2],[6,3],[6,4],[6,5],
+  // Going up (cells 5-11)
+  [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
+  // Top row going right (cells 11-13)
+  [0,7],[0,8],
+  // Going down right side (cells 13-18)
+  [1,8],[2,8],[3,8],[4,8],[5,8],
+  // Turning right (cells 18-24)
+  [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
+  // Right side going down (cells 24-26)
+  [7,14],[8,14],
+  // Going left bottom right (cells 26-31)
+  [8,13],[8,12],[8,11],[8,10],[8,9],
+  // Bottom area (cells 31-37)
+  [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
+  // Bottom row going left (cells 37-39)
+  [14,7],[14,6],
+  // Going up left side (cells 39-44)
+  [13,6],[12,6],[11,6],[10,6],[9,6],
+  // Turning left (cells 44-50)
+  [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
+  // Left side going up (cells 50-52)
+  [7,0],[6,0]
+];
+
+// Home column tracks (6 cells each, ending at center)
+const HOME_COLS = [
+  // Red (goes right from col 1-6 on row 7)
+  [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],
+  // Green (goes down from row 1-6 on col 7)
+  [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],
+  // Yellow (goes left from col 13-8 on row 7)
+  [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]],
+  // Blue (goes up from row 13-8 on col 7)
+  [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]],
+];
+
+// Safe squares (track indices)
+const SAFE_SQUARES = [0, 8, 13, 21, 26, 34, 39, 47];
+
+// Ludo game state
+let ludo = {
+  players: [], // { name, color, tokens: [{pos, isHome, isStart, steps}] }
+  currentPlayer: 0,
+  diceValue: null,
+  diceRolled: false,
+  gameOver: false,
+};
+
+function selectPlayerCount(n, btn) {
+  ludoNumPlayers = n;
+  document.querySelectorAll('.pc-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlayerNameInputs();
+}
+
+function renderPlayerNameInputs() {
+  const container = document.getElementById('player-names-setup');
+  container.innerHTML = '';
+  const activeColors = getActiveColors();
+  for (let i = 0; i < ludoNumPlayers; i++) {
+    const row = document.createElement('div');
+    row.className = 'player-name-row';
+    row.innerHTML = `
+      <div class="player-color-dot" style="background:${activeColors[i]}"></div>
+      <input class="player-name-input" id="pname-${i}" type="text" value="${ludoPlayerNames[i] || PLAYER_NAMES_DEFAULT[i]}" maxlength="12" placeholder="Player ${i+1}">
+    `;
+    container.appendChild(row);
+  }
+}
+
+function getActiveColors() {
+  // For 2 players: Red & Green. For 3: Red, Green, Yellow. For 4: all.
+  return PLAYER_COLORS.slice(0, ludoNumPlayers);
+}
+
+function startLudo() {
+  ludoGameStarted = true;
+  const activeColors = getActiveColors();
+
+  ludo.players = [];
+  for (let i = 0; i < ludoNumPlayers; i++) {
+    const nameInput = document.getElementById('pname-' + i);
+    const name = nameInput ? nameInput.value.trim() || PLAYER_NAMES_DEFAULT[i] : PLAYER_NAMES_DEFAULT[i];
+    ludo.players.push({
+      name,
+      color: activeColors[i],
+      playerIdx: i,
+      tokens: [
+        { pos: -1, steps: 0, isStart: true, isHome: false },
+        { pos: -1, steps: 0, isStart: true, isHome: false },
+        { pos: -1, steps: 0, isStart: true, isHome: false },
+        { pos: -1, steps: 0, isStart: true, isHome: false },
+      ]
     });
   }
-})();
 
-// ─── PROGRESS ────────────────────────────────────────────
-function updateRemaining(){
-  const counts=Array(10).fill(0);
-  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(board[r][c]>0) counts[board[r][c]]++;
-  for(let n=1;n<=9;n++){const rem=9-counts[n];const el=document.getElementById('r'+n);if(el) el.textContent=rem>0?rem:'';}
-  updateProgress();
-}
-function updateProgress(){
-  let filled=0;
-  for(let r=0;r<9;r++) for(let c=0;c<9;c++) if(board[r][c]===solution[r][c]) filled++;
-  const progress=Math.round((filled/81)*100);
-  const fill=document.getElementById('progress-fill');
-  const text=document.getElementById('progress-text');
-  if(fill) fill.style.width=progress+'%';
-  if(text) text.textContent=filled+'/81 cells ('+progress+'%)';
+  ludo.currentPlayer = 0;
+  ludo.diceValue = null;
+  ludo.diceRolled = false;
+  ludo.gameOver = false;
+
+  document.getElementById('ludo-setup').style.display = 'none';
+  document.getElementById('ludo-game').style.display = '';
+
+  updateLudoUI();
+  drawBoard();
+  addLog('Game started! ' + ludo.players[0].name + ' goes first.');
 }
 
-// ─── TOAST ───────────────────────────────────────────────
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+function restartLudo() {
+  ludoGameStarted = false;
+  document.getElementById('ludo-setup').style.display = '';
+  document.getElementById('ludo-game').style.display = 'none';
+  renderPlayerNameInputs();
 }
 
-// ─── BOOT ────────────────────────────────────────────────
-newGame();
-renderResults();
+const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+function rollDice() {
+  if (ludo.diceRolled || ludo.gameOver) return;
+  const diceEl = document.getElementById('dice-display');
+  diceEl.classList.add('rolling');
+
+  // Animate
+  playDiceRoll();
+  let count = 0;
+  const interval = setInterval(() => {
+    diceEl.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+    count++;
+    if (count >= 8) {
+      clearInterval(interval);
+      diceEl.classList.remove('rolling');
+      const val = Math.floor(Math.random() * 6) + 1;
+      ludo.diceValue = val;
+      ludo.diceRolled = true;
+      diceEl.textContent = DICE_FACES[val - 1];
+
+      const p = ludo.players[ludo.currentPlayer];
+      document.getElementById('dice-result').textContent = `${p.name} rolled a ${val}`;
+      addLog(`${p.name} rolled a ${val}`);
+
+      // Check if any move is possible
+      const movable = getMovableTokens(ludo.currentPlayer, val);
+      if (movable.length === 0) {
+        addLog(`${p.name} has no valid moves.`);
+        setTimeout(() => nextTurn(false), 1200);
+      } else {
+        drawBoard(); // highlight movable tokens
+      }
+    }
+  }, 60);
+}
+
+function getMovableTokens(playerIdx, diceVal) {
+  const player = ludo.players[playerIdx];
+  const movable = [];
+  player.tokens.forEach((token, ti) => {
+    if (token.isHome) return; // already home
+    if (token.isStart) {
+      if (diceVal === 6) movable.push(ti); // need 6 to leave start
+      return;
+    }
+    // On board: check if move is valid (won't overshoot home)
+    const stepsLeft = 57 - token.steps; // 52 track + 5 home column + 1 final = 58 total, home at step 57
+    if (diceVal <= stepsLeft) movable.push(ti);
+  });
+  return movable;
+}
+
+function moveToken(playerIdx, tokenIdx) {
+  if (!ludo.diceRolled || ludo.gameOver) return;
+  const val = ludo.diceValue;
+  const movable = getMovableTokens(playerIdx, val);
+  if (!movable.includes(tokenIdx)) return;
+
+  const player = ludo.players[playerIdx];
+  const token = player.tokens[tokenIdx];
+
+  if (token.isStart) {
+    // Place on board at starting position
+    token.isStart = false;
+    token.pos = PLAYER_START[playerIdx];
+    token.steps = 0;
+    addLog(`${player.name}'s token entered the board!`);
+  } else {
+    // Move forward
+    token.steps += val;
+    if (token.steps >= 57) {
+      token.isHome = true;
+      token.steps = 57;
+      // Check if ALL tokens of this player are home
+      const allHome = player.tokens.every(t => t.isHome);
+      if (allHome) {
+        playAllHomeSound();
+      } else {
+        playHomeSound();
+      }
+      addLog(`🏆 ${player.name}'s token reached HOME!`);
+    } else {
+      // Calculate new track position
+      token.pos = (PLAYER_START[playerIdx] + token.steps) % 52;
+    }
+  }
+
+  // Check for captures (if on main track, not safe square, not in home col)
+  if (!token.isHome && token.steps < 52) {
+    const trackPos = token.pos;
+    const isSafe = SAFE_SQUARES.includes(trackPos) || trackPos === PLAYER_START[playerIdx];
+    if (!isSafe) {
+      ludo.players.forEach((otherPlayer, opi) => {
+        if (opi === playerIdx) return;
+        otherPlayer.tokens.forEach((ot, oti) => {
+          if (!ot.isStart && !ot.isHome && ot.steps < 52 && ot.pos === trackPos) {
+            // Capture!
+            ot.isStart = true;
+            ot.pos = -1;
+            ot.steps = 0;
+            playCaptureSound();
+            addLog(`💥 ${player.name} captured ${otherPlayer.name}'s token!`);
+          }
+        });
+      });
+    }
+  }
+
+  // Check win
+  if (checkLudoWin(playerIdx)) {
+    ludo.gameOver = true;
+    drawBoard();
+    setTimeout(() => showLudoWin(player), 500);
+    return;
+  }
+
+  // Roll again if 6 or got token home
+  const gotHome = token.isHome;
+  if (val === 6 || gotHome) {
+    ludo.diceRolled = false;
+    ludo.diceValue = null;
+    document.getElementById('dice-result').textContent = `${player.name} rolls again!`;
+    addLog(`${player.name} gets another turn!`);
+    drawBoard();
+  } else {
+    nextTurn(false);
+  }
+}
+
+function checkLudoWin(playerIdx) {
+  return ludo.players[playerIdx].tokens.every(t => t.isHome);
+}
+
+function nextTurn(skipAnimation) {
+  ludo.diceRolled = false;
+  ludo.diceValue = null;
+  ludo.currentPlayer = (ludo.currentPlayer + 1) % ludo.players.length;
+  const p = ludo.players[ludo.currentPlayer];
+  document.getElementById('dice-result').textContent = `${p.name}'s turn — click dice to roll`;
+  document.getElementById('dice-display').textContent = '🎲';
+  addLog(`--- ${p.name}'s turn ---`);
+  updateLudoUI();
+  drawBoard();
+}
+
+function showLudoWin(player) {
+  document.getElementById('win-emoji').textContent = '🏆';
+  document.getElementById('win-headline').innerHTML = `<em>${player.name}</em> Wins!`;
+  document.getElementById('win-badge').innerHTML = '🎲 Ludo Champion';
+  document.getElementById('win-message').textContent = `${player.name} raced all 4 tokens home first. Brilliant strategy!`;
+  document.getElementById('win-new-btn').onclick = () => { restartLudo(); closeWin(); };
+  setTimeout(() => { document.getElementById('win-overlay').classList.add('show'); launchConfetti(); }, 300);
+}
+
+function updateLudoUI() {
+  const p = ludo.players[ludo.currentPlayer];
+  const dot = document.getElementById('turn-dot');
+  const name = document.getElementById('turn-name');
+  dot.style.background = p.color;
+  dot.style.color = p.color;
+  name.textContent = p.name;
+
+  // Update player status list
+  const list = document.getElementById('player-status-list');
+  list.innerHTML = ludo.players.map((pl, i) => {
+    const homeCount = pl.tokens.filter(t => t.isHome).length;
+    const tokensHTML = pl.tokens.map(t =>
+      `<div class="ps-token ${t.isHome ? 'home' : ''}" style="background:${pl.color};color:${pl.color}"></div>`
+    ).join('');
+    return `
+      <div class="player-status-row ${i === ludo.currentPlayer ? 'current-turn' : ''}">
+        <div class="ps-dot" style="background:${pl.color}"></div>
+        <div class="ps-name">${pl.name}</div>
+        <div class="ps-tokens">${tokensHTML}</div>
+        <div class="ps-home-count">${homeCount}/4</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function addLog(msg) {
+  const log = document.getElementById('game-log');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.textContent = msg;
+  log.insertBefore(entry, log.firstChild);
+  // Keep max 30 entries
+  while (log.children.length > 30) log.removeChild(log.lastChild);
+}
+
+// ═══════════════════════════════════════════════════════
+// LUDO BOARD DRAWING
+// ═══════════════════════════════════════════════════════
+function drawBoard() {
+  const svg = document.getElementById('ludo-svg');
+  const SIZE = 600;
+  const CELL = SIZE / 15;
+  const isLight = document.body.classList.contains('light');
+  const bg = isLight ? '#f0f0f8' : '#0e0e16';
+  const gridColor = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+  const textColor = isLight ? '#1a1a2e' : '#f0f0f8';
+
+  let html = '';
+
+  // Background
+  html += `<rect width="600" height="600" fill="${bg}" rx="14"/>`;
+
+  // Draw 15x15 grid cells
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < 15; col++) {
+      const x = col * CELL;
+      const y = row * CELL;
+      const fill = getCellFill(row, col, isLight);
+      html += `<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" fill="${fill}" stroke="${gridColor}" stroke-width="0.5"/>`;
+    }
+  }
+
+  // Draw safe star markers
+  SAFE_SQUARES.forEach(si => {
+    if (si < TRACK.length) {
+      const [row, col] = TRACK[si];
+      const cx = col * CELL + CELL / 2;
+      const cy = row * CELL + CELL / 2;
+      html += `<text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="${CELL * 0.55}" opacity="0.5">⭐</text>`;
+    }
+  });
+
+  // Draw home triangle (center 3x3)
+  // Split into 4 triangles
+  const midX = 7.5 * CELL, midY = 7.5 * CELL;
+  const corners = [
+    [6 * CELL, 6 * CELL], [9 * CELL, 6 * CELL],
+    [9 * CELL, 9 * CELL], [6 * CELL, 9 * CELL]
+  ];
+  // Always use all 4 fixed player colors for the board (independent of player count)
+  const allFour = PLAYER_COLORS; // [red, green, yellow, blue]
+
+  // Top triangle → green
+  html += `<polygon points="${corners[0][0]},${corners[0][1]} ${corners[1][0]},${corners[1][1]} ${midX},${midY}" fill="${allFour[1]}" opacity="0.8"/>`;
+  // Right triangle → yellow
+  html += `<polygon points="${corners[1][0]},${corners[1][1]} ${corners[2][0]},${corners[2][1]} ${midX},${midY}" fill="${allFour[2]}" opacity="0.8"/>`;
+  // Bottom triangle → blue
+  html += `<polygon points="${corners[2][0]},${corners[2][1]} ${corners[3][0]},${corners[3][1]} ${midX},${midY}" fill="${allFour[3]}" opacity="0.8"/>`;
+  // Left triangle → red
+  html += `<polygon points="${corners[3][0]},${corners[3][1]} ${corners[0][0]},${corners[0][1]} ${midX},${midY}" fill="${allFour[0]}" opacity="0.8"/>`;
+
+  // Star in center
+  html += `<text x="${midX}" y="${midY + 7}" text-anchor="middle" font-size="22" opacity="0.9">🏠</text>`;
+
+  // Draw home column paths — always all 4
+  for (let pi = 0; pi < 4; pi++) {
+    const col = HOME_COLS[pi];
+    col.forEach(([row, c], step) => {
+      const x = c * CELL + 2;
+      const y = row * CELL + 2;
+      const w = CELL - 4;
+      const h = CELL - 4;
+      html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${allFour[pi]}" opacity="${0.3 + step * 0.1}" rx="3"/>`;
+    });
+  }
+
+  // Draw yard areas — always all 4 corners with full color
+  const yardDefs = [
+    { pi: 0, rows: [0,5], cols: [0,5] },   // top-left: Red
+    { pi: 1, rows: [0,5], cols: [9,14] },  // top-right: Green
+    { pi: 2, rows: [9,14], cols: [9,14] }, // bottom-right: Yellow
+    { pi: 3, rows: [9,14], cols: [0,5] },  // bottom-left: Blue
+  ];
+
+  yardDefs.forEach(({ pi, rows, cols }) => {
+    const color = allFour[pi];
+    const x = cols[0] * CELL;
+    const y = rows[0] * CELL;
+    const w = (cols[1] - cols[0] + 1) * CELL;
+    const h = (rows[1] - rows[0] + 1) * CELL;
+    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="0.18" rx="4"/>`;
+    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${color}" stroke-width="2" opacity="0.55" rx="4"/>`;
+    // Inner glow circle
+    const cx = (cols[0] + cols[1] + 1) / 2 * CELL;
+    const cy = (rows[0] + rows[1] + 1) / 2 * CELL;
+    html += `<circle cx="${cx}" cy="${cy}" r="${CELL * 1.8}" fill="${color}" opacity="0.14"/>`;
+  });
+
+  // Determine movable tokens
+  const movable = ludo.diceRolled && !ludo.gameOver
+    ? getMovableTokens(ludo.currentPlayer, ludo.diceValue)
+    : [];
+
+  // Draw tokens
+  ludo.players.forEach((player, pi) => {
+    const yardDef = yardDefs[pi];
+    const startCols = getYardSlots(pi);
+
+    player.tokens.forEach((token, ti) => {
+      let cx, cy;
+      const isMovable = pi === ludo.currentPlayer && movable.includes(ti);
+
+      if (token.isHome) {
+        // In home center – slightly offset per token
+        const offsets = [[-10,-10],[10,-10],[10,10],[-10,10]];
+        cx = 7.5 * CELL + offsets[ti][0];
+        cy = 7.5 * CELL + offsets[ti][1];
+      } else if (token.isStart) {
+        // In yard
+        const [sc, sr] = startCols[ti];
+        cx = sc * CELL + CELL / 2;
+        cy = sr * CELL + CELL / 2;
+      } else if (token.steps >= 52) {
+        // In home column
+        const homeStep = token.steps - 52; // 0-4
+        const colCell = HOME_COLS[pi][homeStep];
+        cx = colCell[1] * CELL + CELL / 2;
+        cy = colCell[0] * CELL + CELL / 2;
+      } else {
+        // On main track
+        const trackCell = TRACK[token.pos];
+        cx = trackCell[1] * CELL + CELL / 2;
+        cy = trackCell[0] * CELL + CELL / 2;
+
+        // Offset if multiple tokens on same cell
+        const offset = getTokenOffset(pi, ti, token.pos);
+        cx += offset[0];
+        cy += offset[1];
+      }
+
+      const r = CELL * 0.35;
+      const glowId = `glow-${pi}-${ti}`;
+
+      if (isMovable) {
+        html += `<defs><filter id="${glowId}"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+        html += `<circle cx="${cx}" cy="${cy}" r="${r + 5}" fill="${player.color}" opacity="0.25" class="token-pulse">
+          <animate attributeName="r" values="${r+3};${r+8};${r+3}" dur="1s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.25;0.05;0.25" dur="1s" repeatCount="indefinite"/>
+        </circle>`;
+      }
+
+      // Token shadow
+      html += `<circle cx="${cx + 1}" cy="${cy + 2}" r="${r}" fill="rgba(0,0,0,0.3)"/>`;
+      // Token body
+      html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${player.color}" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" filter="${isMovable ? `url(#${glowId})` : ''}" style="cursor:${isMovable ? 'pointer' : 'default'}" onclick="${isMovable ? `moveToken(${pi},${ti})` : ''}"/>`;
+      // Token inner circle
+      html += `<circle cx="${cx}" cy="${cy}" r="${r * 0.5}" fill="rgba(255,255,255,0.3)"/>`;
+      // Token number
+      html += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="${CELL * 0.28}" fill="white" font-weight="bold" font-family="DM Mono,monospace" style="pointer-events:none">${ti + 1}</text>`;
+    });
+  });
+
+  // Grid lines
+  html += `<rect width="600" height="600" fill="none" stroke="${isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.05)'}" stroke-width="1" rx="14"/>`;
+
+  svg.innerHTML = html;
+}
+
+function getYardSlots(pi) {
+  // Returns [col, row] for 4 token slots within a yard
+  const yardGrids = [
+    // Red: top-left (rows 0-5, cols 0-5) → inner 2x2 at rows 1-3, cols 1-3
+    [[1,1],[3,1],[1,3],[3,3]],
+    // Green: top-right (rows 0-5, cols 9-14)
+    [[10,1],[12,1],[10,3],[12,3]],
+    // Yellow: bottom-right (rows 9-14, cols 9-14)
+    [[10,10],[12,10],[10,12],[12,12]],
+    // Blue: bottom-left (rows 9-14, cols 0-5)
+    [[1,10],[3,10],[1,12],[3,12]],
+  ];
+  return yardGrids[pi];
+}
+
+function getTokenOffset(playerIdx, tokenIdx, pos) {
+  // Small offsets to separate tokens on same square
+  const offsets = [[-5,-5],[5,-5],[5,5],[-5,5]];
+  return offsets[tokenIdx];
+}
+
+function getCellFill(row, col, isLight) {
+  const base = isLight ? '#e8e8f0' : '#12121a';
+  const track = isLight ? '#d8d8e8' : '#1a1a28';
+
+  // Check if it's on the main track
+  const onTrack = TRACK.some(([r, c]) => r === row && c === col);
+  if (onTrack) return track;
+
+  // Home columns
+  for (let pi = 0; pi < 4; pi++) {
+    if (HOME_COLS[pi].some(([r, c]) => r === row && c === col)) {
+      return PLAYER_COLORS[pi] + (isLight ? '30' : '20');
+    }
+  }
+
+  // Yard areas (corners)
+  const inYard = (
+    (row < 6 && col < 6) ||
+    (row < 6 && col > 8) ||
+    (row > 8 && col < 6) ||
+    (row > 8 && col > 8)
+  );
+  if (inYard) return isLight ? '#e0e0ee' : '#0f0f1a';
+
+  // Center
+  if (row >= 6 && row <= 8 && col >= 6 && col <= 8) return 'transparent';
+
+  return base;
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+// Default player count = 3 selected, render inputs
+selectPlayerCount(3, document.querySelector('.pc-btn[data-n="3"]'));
+newGame(); // start Sudoku
 </script>
 </body>
 </html>
