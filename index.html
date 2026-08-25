@@ -454,6 +454,75 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
   position: relative;
 }
 
+/* Corner dice buttons */
+.corner-dice {
+  position: absolute;
+  z-index: 10;
+}
+
+.corner-dice-tl {
+  top: 8%;
+  left: 8%;
+}
+
+.corner-dice-tr {
+  top: 8%;
+  right: 8%;
+}
+
+.corner-dice-br {
+  bottom: 8%;
+  right: 8%;
+}
+
+.corner-dice-bl {
+  bottom: 8%;
+  left: 8%;
+}
+
+.corner-dice-btn {
+  width: 50px;
+  height: 50px;
+  background: var(--surface);
+  border: 2px solid var(--border-bright);
+  border-radius: 12px;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.corner-dice-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface2);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(124,106,247,0.4);
+}
+
+.corner-dice-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.corner-dice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.corner-dice-btn.rolling {
+  animation: diceRoll 0.5s ease;
+}
+
+.corner-dice-btn.active-turn {
+  border-color: var(--accent);
+  background: rgba(124,106,247,0.12);
+  box-shadow: 0 0 15px rgba(124,106,247,0.4);
+}
+
 #ludo-svg {
   width: 100%;
   height: 100%;
@@ -579,6 +648,44 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* Individual player dice buttons */
+.ps-dice-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.ps-dice-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.ps-dice-btn:hover:not(.disabled) {
+  border-color: var(--accent);
+  background: rgba(124,106,247,0.12);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(124,106,247,0.25);
+}
+
+.ps-dice-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.ps-dice-btn.rolling {
+  animation: diceRoll 0.5s ease;
 }
 
 /* Game log */
@@ -1152,6 +1259,7 @@ body.light .chess-eval-fill { background: #1a1a2e; }
     </div>
     <button class="htp-btn" id="how-to-play-btn" onclick="openHTP()">? How to Play</button>
     <button class="htp-btn" id="leaderboard-btn" onclick="openLeaderboard()">🏆 Leaderboard</button>
+    <button class="theme-toggle" id="fullscreen-toggle" onclick="toggleFullscreen()" title="Toggle full screen">⛶</button>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
 </header>
@@ -1300,6 +1408,20 @@ body.light .chess-eval-fill { background: #1a1a2e; }
             <svg id="ludo-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
               <!-- Drawn by JS -->
             </svg>
+            
+            <!-- Corner dice buttons -->
+            <div class="corner-dice corner-dice-tl" id="corner-dice-0" onclick="rollDiceForPlayer(0)">
+              <button class="corner-dice-btn" id="corner-dice-btn-0">🎲</button>
+            </div>
+            <div class="corner-dice corner-dice-tr" id="corner-dice-1" onclick="rollDiceForPlayer(1)">
+              <button class="corner-dice-btn" id="corner-dice-btn-1">🎲</button>
+            </div>
+            <div class="corner-dice corner-dice-br" id="corner-dice-2" onclick="rollDiceForPlayer(2)">
+              <button class="corner-dice-btn" id="corner-dice-btn-2">🎲</button>
+            </div>
+            <div class="corner-dice corner-dice-bl" id="corner-dice-3" onclick="rollDiceForPlayer(3)">
+              <button class="corner-dice-btn" id="corner-dice-btn-3">🎲</button>
+            </div>
           </div>
           <div style="font-size:12px;color:var(--text-muted);text-align:center;">Click a highlighted token to move it</div>
         </div>
@@ -1821,6 +1943,26 @@ function toggleTheme() {
   localStorage.setItem('gamehub-theme', isLight ? 'light' : 'dark');
   if (ludoGameStarted) drawBoard();
 }
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {
+      showToast('Fullscreen not available');
+    });
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// Update fullscreen button icon when fullscreen state changes
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('fullscreen-toggle');
+  if (document.fullscreenElement) {
+    btn.textContent = '⛶';
+  } else {
+    btn.textContent = '⛶';
+  }
+});
 (function initTheme() {
   const saved = localStorage.getItem('gamehub-theme') || localStorage.getItem('sudoku-theme');
   if (saved === 'light') { document.body.classList.add('light'); document.getElementById('theme-toggle').textContent = '☀️'; }
@@ -2460,20 +2602,46 @@ function ludoResume() {
 
 const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
+function rollDiceForPlayer(playerIdx) {
+  if (playerIdx !== ludo.currentPlayer || ludo.diceRolled || ludo.gameOver || ludo.paused) return;
+  rollDice();
+}
+
 function rollDice() {
   if (ludo.diceRolled || ludo.gameOver || ludo.paused) return;
+  
+  // Animate main dice
   const diceEl = document.getElementById('dice-display');
   diceEl.classList.add('rolling');
+  
+  // Animate the current player's corner dice button
+  const cornerDiceBtn = document.getElementById(`corner-dice-btn-${ludo.currentPlayer}`);
+  if (cornerDiceBtn && !cornerDiceBtn.disabled) {
+    cornerDiceBtn.classList.add('rolling');
+  }
 
   // Animate
   playDiceRoll();
   let count = 0;
   const interval = setInterval(() => {
-    diceEl.textContent = DICE_FACES[Math.floor(Math.random() * 6)];
+    const randomFace = DICE_FACES[Math.floor(Math.random() * 6)];
+    diceEl.textContent = randomFace;
+    
+    // Update corner dice button during animation
+    if (cornerDiceBtn && !cornerDiceBtn.disabled) {
+      cornerDiceBtn.textContent = randomFace;
+    }
+    
     count++;
     if (count >= 8) {
       clearInterval(interval);
       diceEl.classList.remove('rolling');
+      
+      // Remove rolling class from corner dice button
+      if (cornerDiceBtn) {
+        cornerDiceBtn.classList.remove('rolling');
+      }
+      
       const val = Math.floor(Math.random() * 6) + 1;
       ludo.diceValue = val;
       ludo.diceRolled = true;
@@ -2482,6 +2650,9 @@ function rollDice() {
       const p = ludo.players[ludo.currentPlayer];
       document.getElementById('dice-result').textContent = `${p.name} rolled a ${val}`;
       addLog(`${p.name} rolled a ${val}`);
+      
+      // Update corner dice buttons with final value
+      updateLudoUI();
 
       // Check if any move is possible
       const movable = getMovableTokens(ludo.currentPlayer, val);
@@ -2761,8 +2932,9 @@ function updateLudoUI() {
     const tokensHTML = pl.tokens.map(t =>
       `<div class="ps-token ${t.isHome ? 'home' : ''}" style="background:${pl.color};color:${pl.color}"></div>`
     ).join('');
+    const isCurrentTurn = i === ludo.currentPlayer;
     return `
-      <div class="player-status-row ${i === ludo.currentPlayer ? 'current-turn' : ''}">
+      <div class="player-status-row ${isCurrentTurn ? 'current-turn' : ''}">
         <div class="ps-dot" style="background:${pl.color}"></div>
         <div class="ps-name">${pl.name}</div>
         <div class="ps-tokens">${tokensHTML}</div>
@@ -2770,6 +2942,44 @@ function updateLudoUI() {
       </div>
     `;
   }).join('');
+
+  // Update corner dice buttons
+  ludo.players.forEach((pl, i) => {
+    const cornerDice = document.getElementById(`corner-dice-${i}`);
+    const cornerDiceBtn = document.getElementById(`corner-dice-btn-${i}`);
+    
+    if (cornerDice && cornerDiceBtn) {
+      // Only show corner dice for active players
+      if (i < ludo.players.length) {
+        cornerDice.style.display = '';
+        
+        const isCurrentTurn = i === ludo.currentPlayer;
+        const canRoll = isCurrentTurn && !ludo.diceRolled && !ludo.gameOver && !ludo.paused;
+        
+        // Update button state
+        if (isCurrentTurn) {
+          cornerDiceBtn.classList.add('active-turn');
+        } else {
+          cornerDiceBtn.classList.remove('active-turn');
+        }
+        
+        if (canRoll) {
+          cornerDiceBtn.disabled = false;
+        } else {
+          cornerDiceBtn.disabled = true;
+        }
+        
+        // Update dice face
+        if (isCurrentTurn && ludo.diceValue) {
+          cornerDiceBtn.textContent = DICE_FACES[ludo.diceValue - 1];
+        } else {
+          cornerDiceBtn.textContent = '🎲';
+        }
+      } else {
+        cornerDice.style.display = 'none';
+      }
+    }
+  });
 }
 
 function addLog(msg) {
@@ -2919,6 +3129,7 @@ function drawBoard() {
 
       const r = CELL * 0.35;
       const glowId = `glow-${pi}-${ti}`;
+      const gradientId = `tokenGrad-${pi}-${ti}`;
 
       if (isMovable) {
         html += `<defs><filter id="${glowId}"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
@@ -2928,14 +3139,34 @@ function drawBoard() {
         </circle>`;
       }
 
-      // Token shadow
-      html += `<circle cx="${cx + 1}" cy="${cy + 2}" r="${r}" fill="rgba(0,0,0,0.3)"/>`;
-      // Token body
-      html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${player.color}" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" filter="${isMovable ? `url(#${glowId})` : ''}" style="cursor:${isMovable ? 'pointer' : 'default'}" onclick="${isMovable ? `moveToken(${pi},${ti})` : ''}"/>`;
-      // Token inner circle
-      html += `<circle cx="${cx}" cy="${cy}" r="${r * 0.5}" fill="rgba(255,255,255,0.3)"/>`;
-      // Token number
-      html += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="${CELL * 0.28}" fill="white" font-weight="bold" font-family="DM Mono,monospace" style="pointer-events:none">${ti + 1}</text>`;
+      // 3D gradient for token
+      html += `<defs>
+        <radialGradient id="${gradientId}" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.8)"/>
+          <stop offset="40%" stop-color="${player.color}"/>
+          <stop offset="100%" stop-color="${darkenColor(player.color, 30)}"/>
+        </radialGradient>
+      </defs>`;
+
+      // Enhanced 3D shadow
+      html += `<ellipse cx="${cx + 2}" cy="${cy + 4}" rx="${r * 0.9}" ry="${r * 0.4}" fill="rgba(0,0,0,0.4)" opacity="0.6"/>`;
+      
+      // Token body with 3D gradient
+      html += `<circle cx="${cx}" cy="${cy - 1}" r="${r}" fill="url(#${gradientId})" stroke="rgba(255,255,255,0.7)" stroke-width="2" filter="${isMovable ? `url(#${glowId})` : ''}" style="cursor:${isMovable ? 'pointer' : 'default'}" onclick="${isMovable ? `moveToken(${pi},${ti})` : ''}"/>`;
+      
+      // Token inner highlight (3D effect)
+      html += `<ellipse cx="${cx - r * 0.25}" cy="${cy - r * 0.35}" rx="${r * 0.35}" ry="${r * 0.25}" fill="rgba(255,255,255,0.5)" opacity="0.7"/>`;
+      
+      // Token inner circle with gradient
+      html += `<circle cx="${cx}" cy="${cy - 1}" r="${r * 0.5}" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>`;
+      
+      // Token number with shadow
+      html += `<defs>
+        <filter id="textShadow-${pi}-${ti}">
+          <feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="rgba(0,0,0,0.8)" flood-opacity="0.8"/>
+        </filter>
+      </defs>`;
+      html += `<text x="${cx}" y="${cy + 3}" text-anchor="middle" font-size="${CELL * 0.28}" fill="white" font-weight="bold" font-family="DM Mono,monospace" filter="url(#textShadow-${pi}-${ti})" style="pointer-events:none">${ti + 1}</text>`;
     });
   });
 
@@ -2994,6 +3225,18 @@ function getCellFill(row, col, isLight) {
   if (row >= 6 && row <= 8 && col >= 6 && col <= 8) return 'transparent';
 
   return base;
+}
+
+function darkenColor(hex, percent) {
+  // Helper function to darken a hex color by a percentage
+  const num = parseInt(hex.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = (num >> 16) - amt;
+  const G = (num >> 8 & 0x00FF) - amt;
+  const B = (num & 0x0000FF) - amt;
+  return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+    (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+    (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
 }
 
 // ═══════════════════════════════════════════════════════
