@@ -35,6 +35,11 @@
   --p2: #6af7c8;
   --p3: #f0c060;
   --p4: #7c6af7;
+  /* Accessibility modes */
+  --high-contrast: 0;
+  --colorblind-mode: 0;
+  --font-scale: 1;
+  --button-scale: 1;
 }
 
 body.light {
@@ -61,7 +66,82 @@ body.light {
   --error-color: #e0366a;
 }
 
+/* High contrast mode */
+body.high-contrast {
+  --bg: #000000;
+  --surface: #1a1a1a;
+  --surface2: #2a2a2a;
+  --border: #ffffff;
+  --border-bright: #ffffff;
+  --accent: #ffff00;
+  --accent2: #00ffff;
+  --accent3: #ff00ff;
+  --gold: #ffff00;
+  --text: #ffffff;
+  --text-dim: #e0e0e0;
+  --text-muted: #b0b0b0;
+  --cell: #0a0a0a;
+  --cell-hover: #1a1a1a;
+  --cell-selected: #ffff00;
+  --cell-same: #2a2a2a;
+  --cell-error: #ff0000;
+  --cell-fixed: #0f0f0f;
+  --given: #ffffff;
+  --user-color: #ffff00;
+  --error-color: #ff0000;
+  --p1: #ff0000;
+  --p2: #00ff00;
+  --p3: #ffff00;
+  --p4: #00ffff;
+}
+
+/* Color-blind friendly mode */
+body.colorblind {
+  --p1: #0072B2;  /* Blue */
+  --p2: #D55E00;  /* Vermilion */
+  --p3: #009E73;  /* Teal */
+  --p4: #CC79A7;  /* Reddish purple */
+  --accent: #0072B2;
+  --accent2: #D55E00;
+  --accent3: #009E73;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Screen-reader-only utility: keeps content in the accessibility tree
+   without showing it visually. Used for live-region announcements. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Visible, consistent keyboard-focus ring across the app, including
+   focusable elements inside the Ludo SVG board (tokens, dice). */
+button:focus-visible,
+.cell:focus-visible,
+.dice-btn:focus-visible,
+.corner-dice-btn:focus-visible,
+[role="button"]:focus-visible,
+.ludo-token:focus-visible {
+  outline: 3px solid var(--accent3);
+  outline-offset: 2px;
+}
+.ludo-token:focus-visible { outline-offset: 1px; }
+
+/* Respect the user's OS-level motion preference: cut down on the
+   decorative animation load across the app (confetti, pulses, rings). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 
 body {
   background: var(--bg);
@@ -80,6 +160,32 @@ body::before {
     radial-gradient(ellipse 50% 40% at 10% 90%, rgba(106,247,200,0.08) 0%, transparent 60%);
   pointer-events: none;
   z-index: 0;
+  transition: opacity 0.5s ease;
+}
+
+/* Ludo-specific atmospheric effects */
+.ludo-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(247,106,140,0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 20%, rgba(106,247,200,0.08) 0%, transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba(240,192,96,0.08) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(124,106,247,0.08) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientGlow 8s ease-in-out infinite;
+}
+
+@keyframes ambientGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.ludo-wrap {
+  position: relative;
+  z-index: 1;
 }
 
 .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
@@ -152,6 +258,19 @@ body.light header { background: rgba(244,244,248,0.85); }
   transition: all 0.25s;
 }
 .theme-toggle:hover { background: var(--surface2); border-color: var(--accent); transform: rotate(20deg) scale(1.08); }
+
+.accessibility-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  transition: all 0.25s;
+}
+.accessibility-btn:hover { background: var(--surface2); border-color: var(--accent); transform: scale(1.08); }
+.accessibility-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
 /* TAB BAR */
 .tab-bar {
@@ -452,6 +571,7 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
   width: min(520px, 95vw);
   height: min(520px, 95vw);
   position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Corner dice buttons */
@@ -528,6 +648,7 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
   height: 100%;
   border-radius: 16px;
   box-shadow: 0 0 60px rgba(124,106,247,0.15), 0 0 0 2px rgba(124,106,247,0.2);
+  transition: filter 0.3s ease;
 }
 
 /* Ludo info panel */
@@ -536,6 +657,11 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 18px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.ludo-info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124,106,247,0.15);
 }
 
 .turn-indicator {
@@ -621,16 +747,18 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
 .player-status-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 10px 14px;
   background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
 }
 .player-status-row.current-turn {
-  border-color: rgba(124,106,247,0.4);
-  background: rgba(124,106,247,0.08);
+  background: rgba(124,106,247,0.12);
+  border: 1px solid rgba(124,106,247,0.3);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(124,106,247,0.2);
 }
 .ps-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .ps-name { flex: 1; font-size: 13px; font-weight: 500; }
@@ -641,13 +769,27 @@ body.light .cell:nth-child(n+19):nth-child(-n+27), body.light .cell:nth-child(n+
   width: 14px; height: 14px;
   border-radius: 50%;
   border: 1.5px solid rgba(255,255,255,0.2);
-  opacity: 0.4;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
 }
-.ps-token.home { opacity: 1; box-shadow: 0 0 6px currentColor; }
+.ps-token.home {
+  opacity: 0.3;
+  transform: scale(0.8);
+  box-shadow: 0 0 6px currentColor;
+}
 .ps-home-count {
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   color: var(--text-muted);
+}
+.ps-turn-tag {
+  color: var(--accent3);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.player-status-row.current-turn {
+  box-shadow: 0 0 0 1px rgba(124,106,247,0.35) inset;
 }
 
 /* Individual player dice buttons */
@@ -1083,6 +1225,25 @@ body.light .chess-square.dark-sq  { background: #b58863; }
   border-radius: 10px;
   width: min(520px, 90vw);
 }
+.chess-learning-caption {
+  width: min(520px, 90vw);
+  padding: 10px 16px;
+  background: rgba(124,106,247,0.08);
+  border: 1px solid rgba(124,106,247,0.3);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideUpFade 0.25s ease;
+}
+.chess-learning-caption::before {
+  content: '🔊';
+  font-size: 14px;
+  flex-shrink: 0;
+}
 .chess-turn-indicator {
   display: flex;
   align-items: center;
@@ -1259,6 +1420,9 @@ body.light .chess-eval-fill { background: #1a1a2e; }
     </div>
     <button class="htp-btn" id="how-to-play-btn" onclick="openHTP()">? How to Play</button>
     <button class="htp-btn" id="leaderboard-btn" onclick="openLeaderboard()">🏆 Leaderboard</button>
+    <button class="accessibility-btn" id="contrast-toggle" onclick="toggleHighContrast()" title="Toggle high contrast mode">◐</button>
+    <button class="accessibility-btn" id="colorblind-toggle" onclick="toggleColorblind()" title="Toggle color-blind friendly mode">🎨</button>
+    <button class="accessibility-btn" id="font-scale-btn" onclick="cycleFontSize()" title="Adjust font size">Aa</button>
     <button class="theme-toggle" id="fullscreen-toggle" onclick="toggleFullscreen()" title="Toggle full screen">⛶</button>
     <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
@@ -1374,31 +1538,32 @@ body.light .chess-eval-fill { background: #1a1a2e; }
               <div class="turn-dot" id="turn-dot" style="background:var(--p1);color:var(--p1)"></div>
               <div>
                 <div class="turn-name" id="turn-name">Player 1</div>
-                <div class="turn-sub">YOUR MOVE</div>
+                <div class="turn-sub">CURRENT TURN</div>
               </div>
             </div>
             <div class="dice-area">
-              <div class="dice-btn" id="dice-display" onclick="rollDice()">⚀</div>
-              <div class="dice-result" id="dice-result">Click dice to roll</div>
+              <div class="dice-btn" id="dice-display" role="button" tabindex="0" aria-label="Roll dice" onclick="rollDice()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rollDice();}">⚀</div>
+              <div class="dice-result" id="dice-result" role="status" aria-live="polite">Click dice to roll</div>
             </div>
           </div>
 
           <div class="ludo-info-card">
             <div class="panel-title">Players</div>
-            <div class="player-status-list" id="player-status-list"></div>
+            <div class="player-status-list" id="player-status-list" aria-live="off"></div>
           </div>
 
           <div class="ludo-info-card">
             <div class="panel-title">Game Log</div>
-            <div class="game-log" id="game-log">
+            <div class="game-log" id="game-log" role="log" aria-live="polite" aria-relevant="additions">
               <div class="log-entry">Game started! Good luck everyone.</div>
             </div>
           </div>
 
           <div class="ludo-action-btns">
-            <button class="action-btn" id="ludo-pause-btn" onclick="ludoPause()"><span>⏸</span> Pause</button>
-            <button class="action-btn primary" onclick="restartLudo()"><span>↺</span> New Game</button>
-            <button class="action-btn" id="ludo-result-share-btn" onclick="ludoShareResult()" style="display:none;"><span>↗</span> Share Result</button>
+            <button class="action-btn" id="ludo-pause-btn" onclick="ludoPause()"><span aria-hidden="true">⏸</span> Pause</button>
+            <button class="action-btn" id="ludo-mute-btn" onclick="toggleLudoSound()" aria-pressed="false"><span aria-hidden="true">🔊</span> Sound On</button>
+            <button class="action-btn primary" onclick="restartLudo()"><span aria-hidden="true">↺</span> New Game</button>
+            <button class="action-btn" id="ludo-result-share-btn" onclick="ludoShareResult()" style="display:none;"><span aria-hidden="true">↗</span> Share Result</button>
           </div>
         </div>
 
@@ -1410,20 +1575,21 @@ body.light .chess-eval-fill { background: #1a1a2e; }
             </svg>
             
             <!-- Corner dice buttons -->
-            <div class="corner-dice corner-dice-tl" id="corner-dice-0" onclick="rollDiceForPlayer(0)">
-              <button class="corner-dice-btn" id="corner-dice-btn-0">🎲</button>
+            <div class="corner-dice corner-dice-tl" id="corner-dice-0">
+              <button class="corner-dice-btn" id="corner-dice-btn-0" type="button" aria-label="Roll dice for Red" onclick="rollDiceForPlayer(0)">🎲</button>
             </div>
-            <div class="corner-dice corner-dice-tr" id="corner-dice-1" onclick="rollDiceForPlayer(1)">
-              <button class="corner-dice-btn" id="corner-dice-btn-1">🎲</button>
+            <div class="corner-dice corner-dice-tr" id="corner-dice-1">
+              <button class="corner-dice-btn" id="corner-dice-btn-1" type="button" aria-label="Roll dice for Green" onclick="rollDiceForPlayer(1)">🎲</button>
             </div>
-            <div class="corner-dice corner-dice-br" id="corner-dice-2" onclick="rollDiceForPlayer(2)">
-              <button class="corner-dice-btn" id="corner-dice-btn-2">🎲</button>
+            <div class="corner-dice corner-dice-br" id="corner-dice-2">
+              <button class="corner-dice-btn" id="corner-dice-btn-2" type="button" aria-label="Roll dice for Yellow" onclick="rollDiceForPlayer(2)">🎲</button>
             </div>
-            <div class="corner-dice corner-dice-bl" id="corner-dice-3" onclick="rollDiceForPlayer(3)">
-              <button class="corner-dice-btn" id="corner-dice-btn-3">🎲</button>
+            <div class="corner-dice corner-dice-bl" id="corner-dice-3">
+              <button class="corner-dice-btn" id="corner-dice-btn-3" type="button" aria-label="Roll dice for Blue" onclick="rollDiceForPlayer(3)">🎲</button>
             </div>
           </div>
-          <div style="font-size:12px;color:var(--text-muted);text-align:center;">Click a highlighted token to move it</div>
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;">Click, or Tab + Enter, a highlighted token to move it</div>
+          <div id="ludo-sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
         </div>
       </div>
     </div>
@@ -1567,6 +1733,22 @@ body.light .chess-eval-fill { background: #1a1a2e; }
         </div>
       </div>
 
+      <div class="panel-card">
+        <div class="panel-title">Learning Mode</div>
+        <div class="notes-toggle">
+          <span style="font-size:13px;color:var(--text-dim)">Speak piece moves</span>
+          <div class="toggle-switch" id="chess-learning-toggle" role="switch" aria-checked="false" tabindex="0" aria-label="Toggle learning mode: speak how a piece moves when selected" onclick="chessToggleLearningMode()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();chessToggleLearningMode();}"></div>
+        </div>
+        <div class="chess-ai-row" style="margin-top:10px;">
+          <span>Voice language</span>
+          <div style="display:flex;gap:6px;" role="group" aria-label="Learning mode voice language">
+            <button class="chess-diff-btn active" id="chess-learn-lang-en" onclick="chessSetLearningLang('en',this)">English</button>
+            <button class="chess-diff-btn" id="chess-learn-lang-te" onclick="chessSetLearningLang('te',this)">తెలుగు</button>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5;">When on, selecting a piece explains aloud how it moves — great for beginners.</p>
+      </div>
+
       <div class="panel-card" id="chess-ai-options">
         <div class="panel-title">AI Difficulty</div>
         <div class="chess-diff-btns" style="flex-wrap:wrap;gap:6px;display:flex;">
@@ -1628,6 +1810,9 @@ body.light .chess-eval-fill { background: #1a1a2e; }
           <span style="font-size:10px;color:var(--text-muted);">⬛</span>
         </div>
       </div>
+
+      <!-- Learning mode caption (mirrors what's being spoken, for quiet rooms / hearing-impaired players) -->
+      <div class="chess-learning-caption" id="chess-learning-caption" role="status" aria-live="polite" style="display:none;"></div>
 
       <!-- Board -->
       <div class="chess-board-container">
@@ -1931,6 +2116,7 @@ function switchTab(tab) {
     if (chessState.board.length === 0) chessNewGame();
   } else if (chessHtpBtn) {
     chessHtpBtn.style.display = 'none';
+    if (typeof chessStopSpeaking === 'function') chessStopSpeaking(); // don't keep narrating once the player has left the tab
   }
 }
 
@@ -1942,6 +2128,35 @@ function toggleTheme() {
   document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
   localStorage.setItem('gamehub-theme', isLight ? 'light' : 'dark');
   if (ludoGameStarted) drawBoard();
+}
+
+function toggleHighContrast() {
+  const isHighContrast = document.body.classList.toggle('high-contrast');
+  document.getElementById('contrast-toggle').classList.toggle('active', isHighContrast);
+  localStorage.setItem('gamehub-high-contrast', isHighContrast ? 'true' : 'false');
+  if (ludoGameStarted) drawBoard();
+}
+
+function toggleColorblind() {
+  const isColorblind = document.body.classList.toggle('colorblind');
+  document.getElementById('colorblind-toggle').classList.toggle('active', isColorblind);
+  localStorage.setItem('gamehub-colorblind', isColorblind ? 'true' : 'false');
+  if (ludoGameStarted) drawBoard();
+}
+
+let fontScaleLevel = 1;
+const fontScales = [1, 1.1, 1.2, 0.9];
+
+function cycleFontSize() {
+  fontScaleLevel = (fontScaleLevel + 1) % fontScales.length;
+  const scale = fontScales[fontScaleLevel];
+  document.documentElement.style.setProperty('--font-scale', scale);
+  document.body.style.fontSize = `${16 * scale}px`;
+  localStorage.setItem('gamehub-font-scale', scale);
+  
+  // Update button text to show current scale
+  const btn = document.getElementById('font-scale-btn');
+  btn.textContent = scale === 1 ? 'Aa' : (scale > 1 ? 'Aa+' : 'Aa-');
 }
 
 function toggleFullscreen() {
@@ -1966,6 +2181,31 @@ document.addEventListener('fullscreenchange', () => {
 (function initTheme() {
   const saved = localStorage.getItem('gamehub-theme') || localStorage.getItem('sudoku-theme');
   if (saved === 'light') { document.body.classList.add('light'); document.getElementById('theme-toggle').textContent = '☀️'; }
+  
+  // Initialize high contrast mode
+  const highContrast = localStorage.getItem('gamehub-high-contrast');
+  if (highContrast === 'true') {
+    document.body.classList.add('high-contrast');
+    document.getElementById('contrast-toggle').classList.add('active');
+  }
+  
+  // Initialize colorblind mode
+  const colorblind = localStorage.getItem('gamehub-colorblind');
+  if (colorblind === 'true') {
+    document.body.classList.add('colorblind');
+    document.getElementById('colorblind-toggle').classList.add('active');
+  }
+  
+  // Initialize font scale
+  const savedFontScale = localStorage.getItem('gamehub-font-scale');
+  if (savedFontScale) {
+    const scale = parseFloat(savedFontScale);
+    document.documentElement.style.setProperty('--font-scale', scale);
+    document.body.style.fontSize = `${16 * scale}px`;
+    fontScaleLevel = fontScales.indexOf(scale) !== -1 ? fontScales.indexOf(scale) : 0;
+    const btn = document.getElementById('font-scale-btn');
+    if (btn) btn.textContent = scale === 1 ? 'Aa' : (scale > 1 ? 'Aa+' : 'Aa-');
+  }
 })();
 
 function closeHTP() { document.getElementById('htp-overlay').classList.remove('show'); }
@@ -1984,6 +2224,8 @@ function showToast(msg) {
 // Confetti
 let confettiAnimId = null;
 function launchConfetti() {
+  // Skip the particle burst for people who've asked for reduced motion
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const canvas = document.getElementById('confetti-canvas');
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
@@ -2228,6 +2470,7 @@ function getAudioCtx() {
 }
 
 function playDiceRoll() {
+  if (soundMuted) return;
   try {
     const ctx = getAudioCtx();
     // Rattling noise bursts
@@ -2263,6 +2506,7 @@ function playDiceRoll() {
 }
 
 function playCaptureSound() {
+  if (soundMuted) return;
   try {
     const ctx = getAudioCtx();
     // Descending "bonk" + impact
@@ -2283,6 +2527,7 @@ function playCaptureSound() {
 }
 
 function playHomeSound() {
+  if (soundMuted) return;
   try {
     const ctx = getAudioCtx();
     // Ascending celebratory arpeggio
@@ -2304,6 +2549,7 @@ function playHomeSound() {
 }
 
 function playAllHomeSound() {
+  if (soundMuted) return;
   try {
     const ctx = getAudioCtx();
     // Full chord + shimmer
@@ -2394,10 +2640,35 @@ let ludo = {
   diceRolled: false,
   gameOver: false,
   paused: false,
+  animating: false,
   moves: 0,
   timerSec: 0,
   timerInterval: null,
 };
+
+// Sound mute (shared by the Ludo sound effects below)
+let soundMuted = localStorage.getItem('gamehub-sound-muted') === '1';
+
+function toggleLudoSound() {
+  soundMuted = !soundMuted;
+  localStorage.setItem('gamehub-sound-muted', soundMuted ? '1' : '0');
+  const btn = document.getElementById('ludo-mute-btn');
+  if (btn) {
+    btn.innerHTML = soundMuted ? '<span aria-hidden="true">🔇</span> Sound Off' : '<span aria-hidden="true">🔊</span> Sound On';
+    btn.setAttribute('aria-pressed', soundMuted ? 'true' : 'false');
+  }
+  showToast(soundMuted ? 'Sound muted' : 'Sound on');
+}
+
+// Updates the visually-hidden live region so screen readers hear important
+// events (captures, home, wins) without needing to watch the board.
+// `assertive` interrupts immediately; otherwise it's announced politely.
+function ludoAnnounce(msg, assertive) {
+  const el = document.getElementById('ludo-sr-announcer');
+  if (!el) return;
+  el.setAttribute('aria-live', assertive ? 'assertive' : 'polite');
+  el.textContent = msg;
+}
 
 function ludoFormatTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -2532,11 +2803,17 @@ function startLudo() {
   ludo.diceRolled = false;
   ludo.gameOver = false;
   ludo.paused = false;
+  ludo.animating = false;
   ludo.moves = 0;
   ludo.timerSec = 0;
   startLudoTimer();
   const resultShareBtn = document.getElementById('ludo-result-share-btn');
   if (resultShareBtn) resultShareBtn.style.display = 'none';
+  const muteBtn = document.getElementById('ludo-mute-btn');
+  if (muteBtn) {
+    muteBtn.innerHTML = soundMuted ? '<span aria-hidden="true">🔇</span> Sound Off' : '<span aria-hidden="true">🔊</span> Sound On';
+    muteBtn.setAttribute('aria-pressed', soundMuted ? 'true' : 'false');
+  }
 
   document.getElementById('ludo-setup').style.display = 'none';
   document.getElementById('ludo-game').style.display = '';
@@ -2603,12 +2880,12 @@ function ludoResume() {
 const DICE_FACES = ['⚀','⚁','⚂','⚃','⚄','⚅'];
 
 function rollDiceForPlayer(playerIdx) {
-  if (playerIdx !== ludo.currentPlayer || ludo.diceRolled || ludo.gameOver || ludo.paused) return;
+  if (playerIdx !== ludo.currentPlayer || ludo.diceRolled || ludo.gameOver || ludo.paused || ludo.animating) return;
   rollDice();
 }
 
 function rollDice() {
-  if (ludo.diceRolled || ludo.gameOver || ludo.paused) return;
+  if (ludo.diceRolled || ludo.gameOver || ludo.paused || ludo.animating) return;
   
   // Animate main dice
   const diceEl = document.getElementById('dice-display');
@@ -2650,6 +2927,7 @@ function rollDice() {
       const p = ludo.players[ludo.currentPlayer];
       document.getElementById('dice-result').textContent = `${p.name} rolled a ${val}`;
       addLog(`${p.name} rolled a ${val}`);
+      ludoAnnounce(`${p.name} rolled a ${val}.`);
       
       // Update corner dice buttons with final value
       updateLudoUI();
@@ -2658,6 +2936,7 @@ function rollDice() {
       const movable = getMovableTokens(ludo.currentPlayer, val);
       if (movable.length === 0) {
         addLog(`${p.name} has no valid moves.`);
+        ludoAnnounce(`${p.name} has no valid moves. Turn passes.`);
         setTimeout(() => nextTurn(false), 1200);
       } else {
         drawBoard(); // highlight movable tokens
@@ -2683,7 +2962,7 @@ function getMovableTokens(playerIdx, diceVal) {
 }
 
 function moveToken(playerIdx, tokenIdx) {
-  if (!ludo.diceRolled || ludo.gameOver || ludo.paused) return;
+  if (!ludo.diceRolled || ludo.gameOver || ludo.paused || ludo.animating) return;
   const val = ludo.diceValue;
   const movable = getMovableTokens(playerIdx, val);
   if (!movable.includes(tokenIdx)) return;
@@ -2691,6 +2970,9 @@ function moveToken(playerIdx, tokenIdx) {
   const player = ludo.players[playerIdx];
   const token = player.tokens[tokenIdx];
   ludo.moves++;
+  // Lock the dice/board while the move plays out so a second click can't overlap it
+  ludo.diceRolled = false;
+  ludo.animating = true;
 
   if (token.isStart) {
     // Place on board at starting position
@@ -2698,24 +2980,56 @@ function moveToken(playerIdx, tokenIdx) {
     token.pos = PLAYER_START[playerIdx];
     token.steps = 0;
     addLog(`${player.name}'s token entered the board!`);
+    ludoAnnounce(`${player.name}'s token entered the board.`);
+    drawBoard();
+    ludo.animating = false;
+    finishLudoMove(playerIdx, tokenIdx, val);
   } else {
-    // Move forward
-    token.steps += val;
-    if (token.steps >= 57) {
-      token.isHome = true;
-      token.steps = 57;
-      // Check if ALL tokens of this player are home
-      const allHome = player.tokens.every(t => t.isHome);
-      if (allHome) {
-        playAllHomeSound();
-      } else {
-        playHomeSound();
-      }
-      addLog(`🏆 ${player.name}'s token reached HOME!`);
-    } else {
-      // Calculate new track position
-      token.pos = (PLAYER_START[playerIdx] + token.steps) % 52;
-    }
+    // Animate forward, one square at a time, then resolve the move
+    animateLudoToken(playerIdx, tokenIdx, token.steps, token.steps + val, () => {
+      ludo.animating = false;
+      finishLudoMove(playerIdx, tokenIdx, val);
+    });
+  }
+}
+
+// Steps a token across the board one square per tick, redrawing each frame.
+// Respects prefers-reduced-motion by skipping straight to the final position.
+function animateLudoToken(playerIdx, tokenIdx, fromSteps, toSteps, done) {
+  const token = ludo.players[playerIdx].tokens[tokenIdx];
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) {
+    token.steps = toSteps;
+    if (toSteps < 52) token.pos = (PLAYER_START[playerIdx] + toSteps) % 52;
+    drawBoard();
+    done();
+    return;
+  }
+  let cur = fromSteps;
+  function step() {
+    cur++;
+    token.steps = cur;
+    if (cur < 52) token.pos = (PLAYER_START[playerIdx] + cur) % 52;
+    drawBoard();
+    if (cur >= toSteps) { done(); return; }
+    setTimeout(step, 130);
+  }
+  step();
+}
+
+// Resolves everything that happens once a token has finished moving:
+// reaching home, capturing an opponent, winning, or handing off the turn.
+function finishLudoMove(playerIdx, tokenIdx, val) {
+  const player = ludo.players[playerIdx];
+  const token = player.tokens[tokenIdx];
+
+  if (token.steps >= 57 && !token.isHome) {
+    token.isHome = true;
+    token.steps = 57;
+    const allHome = player.tokens.every(t => t.isHome);
+    if (allHome) playAllHomeSound(); else playHomeSound();
+    addLog(`🏆 ${player.name}'s token reached HOME!`);
+    ludoAnnounce(`${player.name}'s token reached home!`, true);
   }
 
   // Check for captures (if on main track, not safe square, not in home col)
@@ -2725,7 +3039,7 @@ function moveToken(playerIdx, tokenIdx) {
     if (!isSafe) {
       ludo.players.forEach((otherPlayer, opi) => {
         if (opi === playerIdx) return;
-        otherPlayer.tokens.forEach((ot, oti) => {
+        otherPlayer.tokens.forEach((ot) => {
           if (!ot.isStart && !ot.isHome && ot.steps < 52 && ot.pos === trackPos) {
             // Capture!
             ot.isStart = true;
@@ -2733,11 +3047,14 @@ function moveToken(playerIdx, tokenIdx) {
             ot.steps = 0;
             playCaptureSound();
             addLog(`💥 ${player.name} captured ${otherPlayer.name}'s token!`);
+            ludoAnnounce(`${player.name} captured ${otherPlayer.name}'s token! It's back at the start.`, true);
           }
         });
       });
     }
   }
+
+  drawBoard();
 
   // Check win
   if (checkLudoWin(playerIdx)) {
@@ -2755,6 +3072,8 @@ function moveToken(playerIdx, tokenIdx) {
     ludo.diceValue = null;
     document.getElementById('dice-result').textContent = `${player.name} rolls again!`;
     addLog(`${player.name} gets another turn!`);
+    ludoAnnounce(`${player.name} rolls again.`);
+    updateLudoUI();
     drawBoard();
   } else {
     nextTurn(false);
@@ -2773,6 +3092,7 @@ function nextTurn(skipAnimation) {
   document.getElementById('dice-result').textContent = `${p.name}'s turn — click dice to roll`;
   document.getElementById('dice-display').textContent = '🎲';
   addLog(`--- ${p.name}'s turn ---`);
+  ludoAnnounce(`${p.name}'s turn.`);
   updateLudoUI();
   drawBoard();
 }
@@ -2929,16 +3249,16 @@ function updateLudoUI() {
   const list = document.getElementById('player-status-list');
   list.innerHTML = ludo.players.map((pl, i) => {
     const homeCount = pl.tokens.filter(t => t.isHome).length;
-    const tokensHTML = pl.tokens.map(t =>
-      `<div class="ps-token ${t.isHome ? 'home' : ''}" style="background:${pl.color};color:${pl.color}"></div>`
+    const tokensHTML = pl.tokens.map((t, ti) =>
+      `<div class="ps-token ${t.isHome ? 'home' : ''}" style="background:${pl.color};color:${pl.color}" title="Token ${ti + 1}${t.isHome ? ' (home)' : ''}"></div>`
     ).join('');
     const isCurrentTurn = i === ludo.currentPlayer;
     return `
-      <div class="player-status-row ${isCurrentTurn ? 'current-turn' : ''}">
+      <div class="player-status-row ${isCurrentTurn ? 'current-turn' : ''}"${isCurrentTurn ? ' aria-current="true"' : ''}>
         <div class="ps-dot" style="background:${pl.color}"></div>
-        <div class="ps-name">${pl.name}</div>
-        <div class="ps-tokens">${tokensHTML}</div>
-        <div class="ps-home-count">${homeCount}/4</div>
+        <div class="ps-name">${pl.name}${isCurrentTurn ? ' <span class="ps-turn-tag">· turn</span>' : ''}</div>
+        <div class="ps-tokens" aria-hidden="true">${tokensHTML}</div>
+        <div class="ps-home-count">${homeCount}/4 home</div>
       </div>
     `;
   }).join('');
@@ -2954,7 +3274,7 @@ function updateLudoUI() {
         cornerDice.style.display = '';
         
         const isCurrentTurn = i === ludo.currentPlayer;
-        const canRoll = isCurrentTurn && !ludo.diceRolled && !ludo.gameOver && !ludo.paused;
+        const canRoll = isCurrentTurn && !ludo.diceRolled && !ludo.gameOver && !ludo.paused && !ludo.animating;
         
         // Update button state
         if (isCurrentTurn) {
@@ -2975,6 +3295,10 @@ function updateLudoUI() {
         } else {
           cornerDiceBtn.textContent = '🎲';
         }
+
+        // Accessible name reflects whose dice this is and whether it's usable
+        cornerDiceBtn.setAttribute('aria-label',
+          `Roll dice for ${pl.name}${isCurrentTurn ? (canRoll ? ' (your turn)' : ludo.diceValue ? `, rolled ${ludo.diceValue}` : '') : ' (not their turn)'}`);
       } else {
         cornerDice.style.display = 'none';
       }
@@ -3005,6 +3329,11 @@ function drawBoard() {
   const textColor = isLight ? '#1a1a2e' : '#f0f0f8';
 
   let html = '';
+
+  // Accessible title so screen readers announce what this graphic is;
+  // detailed state changes are handled by the live region + player list instead.
+  const turnPlayer = ludo.players[ludo.currentPlayer];
+  html += `<title>Ludo board. ${turnPlayer ? turnPlayer.name + "'s turn." : ''} Highlighted tokens can be activated with Enter or Space.</title>`;
 
   // Background
   html += `<rect width="600" height="600" fill="${bg}" rx="14"/>`;
@@ -3077,12 +3406,15 @@ function drawBoard() {
     const y = rows[0] * CELL;
     const w = (cols[1] - cols[0] + 1) * CELL;
     const h = (rows[1] - rows[0] + 1) * CELL;
-    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="0.18" rx="4"/>`;
-    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${color}" stroke-width="2" opacity="0.55" rx="4"/>`;
+    // Whose turn is it — give that yard a brighter, slightly pulsing border
+    // so the active player is obvious even without reading the text panel.
+    const isActiveYard = pi < ludo.players.length && pi === ludo.currentPlayer && !ludo.gameOver;
+    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" opacity="${isActiveYard ? 0.26 : 0.18}" rx="4"/>`;
+    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${color}" stroke-width="${isActiveYard ? 3 : 2}" opacity="${isActiveYard ? 0.9 : 0.55}" rx="4">${isActiveYard ? `<animate attributeName="opacity" values="0.9;0.5;0.9" dur="1.6s" repeatCount="indefinite"/>` : ''}</rect>`;
     // Inner glow circle
     const cx = (cols[0] + cols[1] + 1) / 2 * CELL;
     const cy = (rows[0] + rows[1] + 1) / 2 * CELL;
-    html += `<circle cx="${cx}" cy="${cy}" r="${CELL * 1.8}" fill="${color}" opacity="0.14"/>`;
+    html += `<circle cx="${cx}" cy="${cy}" r="${CELL * 1.8}" fill="${color}" opacity="${isActiveYard ? 0.2 : 0.14}"/>`;
   });
 
   // Determine movable tokens
@@ -3151,8 +3483,13 @@ function drawBoard() {
       // Enhanced 3D shadow
       html += `<ellipse cx="${cx + 2}" cy="${cy + 4}" rx="${r * 0.9}" ry="${r * 0.4}" fill="rgba(0,0,0,0.4)" opacity="0.6"/>`;
       
-      // Token body with 3D gradient
-      html += `<circle cx="${cx}" cy="${cy - 1}" r="${r}" fill="url(#${gradientId})" stroke="rgba(255,255,255,0.7)" stroke-width="2" filter="${isMovable ? `url(#${glowId})` : ''}" style="cursor:${isMovable ? 'pointer' : 'default'}" onclick="${isMovable ? `moveToken(${pi},${ti})` : ''}"/>`;
+      // Token body with 3D gradient — movable tokens get keyboard focus + activation
+      const tokenA11yLabel = token.isHome
+        ? `${player.name} token ${ti + 1}, home`
+        : token.isStart
+          ? `${player.name} token ${ti + 1}, in yard`
+          : `${player.name} token ${ti + 1}, move ${ludo.diceValue} step${ludo.diceValue === 1 ? '' : 's'}`;
+      html += `<circle cx="${cx}" cy="${cy - 1}" r="${r}" fill="url(#${gradientId})" stroke="rgba(255,255,255,0.7)" stroke-width="2" filter="${isMovable ? `url(#${glowId})` : ''}" class="ludo-token${isMovable ? ' ludo-token-movable' : ''}" style="cursor:${isMovable ? 'pointer' : 'default'}" ${isMovable ? `role="button" tabindex="0" aria-label="${tokenA11yLabel}" onclick="moveToken(${pi},${ti})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();moveToken(${pi},${ti});}"` : ''}/>`;
       
       // Token inner highlight (3D effect)
       html += `<ellipse cx="${cx - r * 0.25}" cy="${cy - r * 0.35}" rx="${r * 0.35}" ry="${r * 0.25}" fill="rgba(255,255,255,0.5)" opacity="0.7"/>`;
@@ -3901,7 +4238,126 @@ let chessState = {
   boardFlipped: false,
   thinking: false,
   promotionPending: null,
+  learningMode: false,   // when true, selecting a piece narrates how it moves
+  learningLang: 'en',    // 'en' or 'te' — voice/caption language for Learning Mode
 };
+
+// ── Learning Mode: speech synthesis explaining piece movement ──
+const PIECE_LEARN_INFO = {
+  en: {
+    p: {
+      name: 'Pawn',
+      move: (color, fromRow) => {
+        const startRow = color === 'white' ? 6 : 1;
+        const canDouble = fromRow === startRow;
+        return `Moves straight ahead one square${canDouble ? ', or two squares since it hasn\'t moved yet' : ''}. It captures diagonally, one square forward, never straight ahead. If it reaches the far end of the board it promotes, usually to a queen.`;
+      }
+    },
+    n: { name: 'Knight', move: () => `Moves in an L shape: two squares in one direction, then one square to the side. It's the only piece that can jump over others.` },
+    b: { name: 'Bishop', move: () => `Moves any number of squares diagonally, in a straight line. This bishop stays on one color square for the whole game.` },
+    r: { name: 'Rook', move: () => `Moves any number of squares in a straight line, horizontally or vertically.` },
+    q: { name: 'Queen', move: () => `Moves any number of squares in any direction — horizontally, vertically, or diagonally. It's the most powerful piece on the board.` },
+    k: { name: 'King', move: () => `Moves just one square in any direction. It can also castle with a rook, if neither has moved yet and the squares between them are empty. Keep it safe — the game ends if it's checkmated.` },
+    colorWord: (color) => color === 'white' ? 'White' : 'Black',
+    countText: (n) => n > 0 ? ` Right now it has ${n} legal move${n === 1 ? '' : 's'}.` : ` It has no legal moves right now.`,
+  },
+  te: {
+    p: {
+      name: 'పాన్ (బంటు)',
+      move: (color, fromRow) => {
+        const startRow = color === 'white' ? 6 : 1;
+        const canDouble = fromRow === startRow;
+        return `ఇది నేరుగా ముందుకు ఒక గడి కదులుతుంది${canDouble ? ', ఇంతవరకు కదలనందున రెండు గళ్ళు కూడా కదలవచ్చు' : ''}. ఇది ఏటవాలుగా, ఒక గడి ముందుకు పక్కకు మాత్రమే ప్రత్యర్థి కాయను తీసుకుంటుంది, నేరుగా ముందుకు కాదు. బోర్డు అవతలి చివరి వరుసకు చేరుకుంటే, సాధారణంగా రాణి (క్వీన్)గా మారుతుంది.`;
+      }
+    },
+    n: { name: 'నైట్ (గుర్రం)', move: () => `ఇది ఆంగ్ల అక్షరం L ఆకారంలో కదులుతుంది: ఒక దిశలో రెండు గళ్ళు, తర్వాత లంబంగా ఒక గడి పక్కకు. ఇతర కాయల మీదుగా దూకగలిగే ఏకైక కాయ ఇదే.` },
+    b: { name: 'బిషప్', move: () => `ఇది ఏటవాలుగా, సరళరేఖలో ఎన్ని గళ్ళైనా కదులుతుంది. ఈ బిషప్ ఆట మొత్తం ఒకే రంగు గడిపై ఉంటుంది.` },
+    r: { name: 'రూక్', move: () => `ఇది సరళరేఖలో అడ్డంగా లేదా నిలువుగా ఎన్ని గళ్ళైనా కదులుతుంది.` },
+    q: { name: 'క్వీన్ (రాణి)', move: () => `ఇది అడ్డంగా, నిలువుగా లేదా ఏటవాలుగా — ఏ దిశలోనైనా ఎన్ని గళ్ళైనా కదులుతుంది. బోర్డు మీద అత్యంత శక్తివంతమైన కాయ ఇదే.` },
+    k: { name: 'కింగ్ (రాజు)', move: () => `ఇది ఏ దిశలోనైనా ఒక్క గడి మాత్రమే కదులుతుంది. రూక్‌తో కలిసి 'క్యాజిల్' చేయవచ్చు, రెండూ ఇంతవరకు కదలకుండా ఉండి మధ్యలో గళ్ళు ఖాళీగా ఉంటే. దీన్ని జాగ్రత్తగా కాపాడుకోండి — చెక్‌మేట్ అయితే ఆట ముగుస్తుంది.` },
+    colorWord: (color) => color === 'white' ? 'తెలుపు' : 'నలుపు',
+    countText: (n) => n > 0 ? ` ప్రస్తుతం దీనికి ${n} చెల్లుబాటు అయ్యే ఎత్తు${n === 1 ? '' : 'లు'} ఉన్నాయి.` : ` ప్రస్తుతం దీనికి చెల్లుబాటు అయ్యే ఎత్తులు లేవు.`,
+  },
+};
+
+// Voices load asynchronously in most browsers — cache them once ready
+let chessCachedVoices = [];
+function chessRefreshVoices() {
+  if (!('speechSynthesis' in window)) return;
+  chessCachedVoices = window.speechSynthesis.getVoices();
+}
+if ('speechSynthesis' in window) {
+  chessRefreshVoices();
+  window.speechSynthesis.onvoiceschanged = chessRefreshVoices;
+}
+
+function chessToggleLearningMode() {
+  chessState.learningMode = !chessState.learningMode;
+  const toggle = document.getElementById('chess-learning-toggle');
+  if (toggle) {
+    toggle.classList.toggle('on', chessState.learningMode);
+    toggle.setAttribute('aria-checked', chessState.learningMode ? 'true' : 'false');
+  }
+  if (!chessState.learningMode) {
+    chessStopSpeaking();
+  } else {
+    showToast('Learning mode on — select a piece to hear how it moves');
+  }
+}
+
+function chessSetLearningLang(lang, btn) {
+  chessState.learningLang = lang;
+  document.getElementById('chess-learn-lang-en').classList.toggle('active', lang === 'en');
+  document.getElementById('chess-learn-lang-te').classList.toggle('active', lang === 'te');
+  chessStopSpeaking();
+  if (lang === 'te') {
+    const hasTeVoice = chessCachedVoices.some(v => v.lang && v.lang.toLowerCase().startsWith('te'));
+    if (!hasTeVoice) {
+      showToast('No Telugu voice found on this device — showing Telugu captions, voice may fall back to a default');
+    }
+  }
+}
+
+function chessStopSpeaking() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  const caption = document.getElementById('chess-learning-caption');
+  if (caption) caption.style.display = 'none';
+}
+
+function chessSpeak(text, lang) {
+  const caption = document.getElementById('chess-learning-caption');
+  if (caption) {
+    caption.textContent = text;
+    caption.style.display = 'flex';
+    caption.lang = lang === 'te' ? 'te-IN' : 'en-US';
+  }
+  if (!('speechSynthesis' in window)) return; // caption still shows even without TTS support
+  try {
+    window.speechSynthesis.cancel(); // don't stack utterances if pieces are clicked quickly
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.pitch = 1;
+    utter.lang = lang === 'te' ? 'te-IN' : 'en-US';
+    // Prefer an actual Telugu voice if the device/browser has one installed
+    if (lang === 'te') {
+      const teVoice = chessCachedVoices.find(v => v.lang && v.lang.toLowerCase().startsWith('te'));
+      if (teVoice) utter.voice = teVoice;
+    }
+    window.speechSynthesis.speak(utter);
+  } catch (e) {}
+}
+
+function chessSpeakPieceInfo(piece, row, col, legalMoveCount) {
+  const lang = chessState.learningLang;
+  const dict = PIECE_LEARN_INFO[lang] || PIECE_LEARN_INFO.en;
+  const info = dict[piece.toLowerCase()];
+  if (!info) return;
+  const colorKey = isWhitePiece(piece) ? 'white' : 'black';
+  const color = dict.colorWord(colorKey);
+  const moveText = info.move(colorKey, row);
+  const countText = dict.countText(legalMoveCount);
+  chessSpeak(`${color} ${info.name}. ${moveText}${countText}`, lang);
+}
 
 function chessSetMode(mode) {
   chessState.mode = mode;
@@ -3925,6 +4381,7 @@ function chessSetPlayerColor(color, btn) {
 }
 
 function chessNewGame() {
+  chessStopSpeaking();
   chessState.board = parseFEN(INITIAL_FEN);
   chessState.turn = 'white';
   chessState.selected = null;
@@ -4192,9 +4649,11 @@ function chessClickSquare(displayRow, displayCol) {
     const moves = getLegalMoves(board, row, col, castleRights, enPassantTarget);
     chessState.selected = { row, col };
     chessState.validMoves = moves;
+    if (chessState.learningMode) chessSpeakPieceInfo(piece, row, col, moves.length);
   } else {
     chessState.selected = null;
     chessState.validMoves = [];
+    if (chessState.learningMode) chessStopSpeaking();
   }
 
   chessRenderBoard();
@@ -4204,6 +4663,7 @@ function chessExecuteMove(fromRow, fromCol, move, promotionChoice) {
   const { board, turn, castleRights, enPassantTarget } = chessState;
   const piece = board[fromRow][fromCol];
   const isCapture = !!move.capture;
+  if (chessState.learningMode) chessStopSpeaking(); // the move is happening now — clear the stale explanation
 
   // Save state for undo
   chessState.history.push({
@@ -4486,6 +4946,7 @@ function minimax(board, depth, alpha, beta, maximizing, color, cr, ep) {
 
 function chessUndo() {
   if (chessState.history.length === 0) return;
+  if (chessState.learningMode) chessStopSpeaking();
   const prev = chessState.history.pop();
   chessState.board = prev.board;
   chessState.turn = prev.turn;
